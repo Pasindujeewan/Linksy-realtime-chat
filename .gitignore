@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+.next/
+out/
+
+# Test coverage
+coverage/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / editors
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Debug files
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+
+# Runtime files
+*.pid
+*.seed
+
+# Certificates / private keys
+*.pem
+*.key
+
+# Local database / cache files
+*.db
+*.sqlite
