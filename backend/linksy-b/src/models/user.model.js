@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     },
-    paswordHash: {
+    passwordHash: {
       type: String,
       select: false, //do not return the password hash when querying the user
       required: function () {
@@ -76,7 +76,6 @@ const userSchema = new mongoose.Schema(
   },
 );
 
-userSchema.index({ username: 1 });
 const User = mongoose.model("User", userSchema);
 
 export default User;
