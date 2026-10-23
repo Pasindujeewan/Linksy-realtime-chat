@@ -1,10 +1,12 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import FormField from "../components/auth/FormField";
-import { registerUser } from "../services/authService";
+import { registerUser, uploadAvatar } from "../services/authService";
 import type { RegisterPayload } from "../types/auth";
 
 type RegisterFields = RegisterPayload & { confirmPassword: string };
 type FieldErrors = Partial<Record<keyof RegisterFields, string>>;
+const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
+const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 const initialValues: RegisterFields = {
   username: "",
@@ -15,7 +17,7 @@ const initialValues: RegisterFields = {
   bio: "",
 };
 
-function validate(values: RegisterFields): FieldErrors {
+function validate(values: RegisterFields, hasAvatarFile: boolean): FieldErrors {
   const errors: FieldErrors = {};
   if (!/^[a-zA-Z0-9_]{3,20}$/.test(values.username.trim())) {
     errors.username = "Use 3–20 letters, numbers, or underscores.";
@@ -27,10 +29,8 @@ function validate(values: RegisterFields): FieldErrors {
   }
   if (values.confirmPassword !== values.password)
     errors.confirmPassword = "Passwords don't match.";
-  try {
-    new URL(values.avatarUrl);
-  } catch {
-    errors.avatarUrl = "Enter a valid profile image URL.";
+  if (!hasAvatarFile && !values.avatarUrl) {
+    errors.avatarUrl = "Choose a profile picture.";
   }
   if (values.bio && values.bio.length > 160)
     errors.bio = "Keep your bio under 160 characters.";
@@ -43,6 +43,13 @@ export default function RegisterPage() {
   const [formError, setFormError] = useState("");
   const [successName, setSuccessName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState("");
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  useEffect(() => () => {
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+  }, [avatarPreview]);
 
   function update<K extends keyof RegisterFields>(
     key: K,
@@ -52,25 +59,63 @@ export default function RegisterPage() {
     setErrors((current) => ({ ...current, [key]: undefined }));
   }
 
+  function handleAvatarChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+      update("avatarUrl", "");
+      setAvatarFile(null);
+      setAvatarPreview("");
+      setErrors((current) => ({
+        ...current,
+        avatarUrl: "Choose a JPG, PNG, WEBP, or GIF image.",
+      }));
+      event.target.value = "";
+      return;
+    }
+    if (file.size > MAX_AVATAR_SIZE) {
+      setAvatarFile(null);
+      setAvatarPreview("");
+      setErrors((current) => ({ ...current, avatarUrl: "Image must be 5 MB or smaller." }));
+      event.target.value = "";
+      return;
+    }
+
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+    setErrors((current) => ({ ...current, avatarUrl: undefined }));
+    update("avatarUrl", "");
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError("");
     setSuccessName("");
-    const nextErrors = validate(values);
+    const nextErrors = validate(values, Boolean(avatarFile));
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
     setIsSubmitting(true);
     try {
+      let avatarUrl = values.avatarUrl;
+      if (avatarFile) {
+        setIsUploadingAvatar(true);
+        avatarUrl = await uploadAvatar(avatarFile);
+        setIsUploadingAvatar(false);
+      }
       // Keep this payload aligned with the backend registerSchema; confirmation stays client-side.
       const { confirmPassword: _confirmPassword, ...payload } = values;
       await registerUser({
         ...payload,
+        avatarUrl,
         username: payload.username.trim(),
         email: payload.email.trim(),
       });
       setSuccessName(values.username.trim());
       setValues(initialValues);
+      setAvatarFile(null);
+      setAvatarPreview("");
     } catch (error) {
       setFormError(
         error instanceof Error
@@ -78,6 +123,7 @@ export default function RegisterPage() {
           : "Something went wrong. Please try again.",
       );
     } finally {
+      setIsUploadingAvatar(false);
       setIsSubmitting(false);
     }
   }
@@ -224,17 +270,31 @@ export default function RegisterPage() {
                 leading={<span>⌑</span>}
               />
             </div>
-            <FormField
-              label="Profile image URL"
-              name="avatarUrl"
-              type="url"
-              placeholder="https://example.com/photo.jpg"
-              required
-              value={values.avatarUrl}
-              error={errors.avatarUrl}
-              onChange={(event) => update("avatarUrl", event.target.value)}
-              leading={<span>◉</span>}
-            />
+            <div className="space-y-1.5">
+              <label htmlFor="avatarFile" className="block text-sm font-semibold text-slate-700">
+                Profile picture
+              </label>
+              <div className="flex items-center gap-4">
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Selected profile picture preview" className="h-16 w-16 rounded-full object-cover" />
+                ) : (
+                  <div aria-hidden="true" className="grid h-16 w-16 place-items-center rounded-full bg-indigo-50 text-2xl text-indigo-500">◉</div>
+                )}
+                <input
+                  id="avatarFile"
+                  name="avatarFile"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  required={!avatarFile}
+                  aria-invalid={Boolean(errors.avatarUrl)}
+                  aria-describedby={errors.avatarUrl ? "avatarFile-error" : undefined}
+                  onChange={handleAvatarChange}
+                  className="block min-w-0 text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100"
+                />
+              </div>
+              <p className="text-xs text-slate-500">JPG, PNG, WEBP, or GIF. Maximum 5 MB.</p>
+              {errors.avatarUrl && <p id="avatarFile-error" className="text-xs text-rose-600">{errors.avatarUrl}</p>}
+            </div>
             <div className="space-y-1.5">
               <label
                 htmlFor="bio"
@@ -265,7 +325,7 @@ export default function RegisterPage() {
               disabled={isSubmitting}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSubmitting ? "Creating your account…" : "Create account"}
+              {isUploadingAvatar ? "Uploading profile picture…" : isSubmitting ? "Creating your account…" : "Create account"}
               {!isSubmitting && <span aria-hidden="true">→</span>}
             </button>
           </form>
