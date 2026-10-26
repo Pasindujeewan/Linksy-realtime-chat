@@ -1,4 +1,11 @@
 import app from "./app.js";
+import connectDB from "./config/db.js";
+import { checkS3Connection } from "./config/s3.js";
+import { connectRedis } from "./config/redis.js";
+
+await connectRedis();
+await checkS3Connection();
+await connectDB();
 
 const PORT = process.env.PORT || 3000;
 
