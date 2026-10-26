@@ -8,6 +8,11 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(5000),
   MONGODB_URI: z.string().min(1, "MONGODB_URI is required"),
   JWT_ACCESS_SECRET: z.string().min(1, "JWT_ACCESS_SECRET is required"),
+  AWS_REGION: z.string().min(1, "AWS_REGION is required"),
+  AWS_S3_BUCKET: z.string().min(1, "AWS_S3_BUCKET is required"),
+  AWS_ACCESS_KEY_ID: z.string().optional(),
+  AWS_SECRET_ACCESS_KEY: z.string().optional(),
+  REDIS_URL: z.string().url(),
 });
 
 const result = envSchema.safeParse(process.env);
