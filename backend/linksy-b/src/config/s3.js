@@ -16,9 +16,9 @@ export async function checkS3Connection() {
       }),
     );
 
-    console.log("✅ AWS S3 connected successfully");
+    console.log(" AWS S3 connected successfully");
   } catch (error) {
-    console.error("❌ AWS S3 connection failed:", error.message);
+    console.error(" AWS S3 connection failed:", error.message);
     throw error;
   }
 }

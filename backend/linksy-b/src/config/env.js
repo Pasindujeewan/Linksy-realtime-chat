@@ -12,6 +12,7 @@ const envSchema = z.object({
   AWS_S3_BUCKET: z.string().min(1, "AWS_S3_BUCKET is required"),
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
+  REDIS_URL: z.string().url(),
 });
 
 const result = envSchema.safeParse(process.env);
