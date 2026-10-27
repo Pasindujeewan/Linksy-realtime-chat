@@ -5,6 +5,10 @@ import argon2 from "argon2";
 import { generateAccessToken } from "../utils/token.js";
 import { successResponse } from "../utils/response.js";
 import mongoose from "mongoose";
+import {
+  getPendingUpload,
+  deletePendingUpload,
+} from "../services/pendingUploadService.js";
 
 export const registerUser = async (req, res, next) => {
   try {
@@ -17,7 +21,7 @@ export const registerUser = async (req, res, next) => {
         .join(", ");
       throw new AppError(message, 400, "VALIDATION_FAIELD");
     }
-    const { username, email, password, bio, avatarUrl } = validateResult.data;
+    const { username, email, password, bio, imageToken } = validateResult.data;
 
     const existingUser = await User.findOne({
       $or: [{ email }, { username }],
@@ -30,6 +34,17 @@ export const registerUser = async (req, res, next) => {
         "USER_ALREADY_EXSIT",
       );
     }
+
+    const pendingUpload = await getPendingUpload(imageToken);
+    console.log("Pending Upload:", pendingUpload);
+    if (!pendingUpload) {
+      throw new AppError(
+        "Invalid or expired image token",
+        400,
+        "INVALID_IMAGE_TOKEN",
+      );
+    }
+
     const userId = new mongoose.Types.ObjectId();
     const accessToken = generateAccessToken(userId);
 
@@ -41,7 +56,7 @@ export const registerUser = async (req, res, next) => {
       email,
       passwordHash,
       bio,
-      avatarUrl,
+      avatarUrl: pendingUpload, // Save the S3 image key as avatarUrl
     });
 
     res.cookie("accessToken", accessToken, {
@@ -57,9 +72,6 @@ export const registerUser = async (req, res, next) => {
         user: {
           id: user._id,
           username: user.username,
-          email: user.email,
-          bio: user.bio,
-          avatarUrl: user.avatarUrl,
         },
       },
       "User registered successfully",
