@@ -25,6 +25,6 @@ export const registerSchema = z
       .max(128, "Password cannot exceed 128 characters"),
 
     bio: z.string().max(160, "Bio cannot exceed 160 characters").optional(),
-    avatarUrl: z.url("Avatar URL must be a valid URL"),
+    imageToken: z.string().optional(),
   })
   .strict();
