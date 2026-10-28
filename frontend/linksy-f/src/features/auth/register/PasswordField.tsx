@@ -4,10 +4,11 @@ import FormField from "../../../components/auth/FormField";
 
 interface PasswordFieldProps {
   label: string;
-  name: "password" | "confirmPassword";
+  name: string;
   placeholder: string;
   value: string;
   error?: string;
+  autoComplete?: string;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -17,6 +18,7 @@ export default function PasswordField({
   placeholder,
   value,
   error,
+  autoComplete = "new-password",
   onChange,
 }: PasswordFieldProps) {
   const [isVisible, setIsVisible] = useState(false);
@@ -27,7 +29,7 @@ export default function PasswordField({
       name={name}
       type={isVisible ? "text" : "password"}
       placeholder={placeholder}
-      autoComplete="new-password"
+      autoComplete={autoComplete}
       required
       value={value}
       error={error}

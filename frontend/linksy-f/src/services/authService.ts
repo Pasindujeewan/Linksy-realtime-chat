@@ -1,5 +1,6 @@
 import type {
   ApiResponse,
+  LoginPayload,
   RegisterPayload,
   RegisteredUser,
   UserProfile,
@@ -56,6 +57,22 @@ export async function registerUser(payload: RegisterPayload): Promise<Registered
   const result = (await response.json()) as ApiResponse<{ user?: RegisteredUser }>;
   if (!response.ok || !result.success || !result.data?.user) {
     throw new Error(result.message || "We couldn't create your account. Please try again.");
+  }
+
+  return result.data.user;
+}
+
+export async function loginUser(payload: LoginPayload): Promise<RegisteredUser> {
+  const response = await fetch(`${apiUrl}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+
+  const result = (await response.json()) as ApiResponse<{ user?: RegisteredUser }>;
+  if (!response.ok || !result.success || !result.data?.user) {
+    throw new Error(result.message || "We couldn't log you in. Please try again.");
   }
 
   return result.data.user;

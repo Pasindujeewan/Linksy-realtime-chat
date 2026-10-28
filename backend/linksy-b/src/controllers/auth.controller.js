@@ -1,14 +1,59 @@
 import User from "../models/user.model.js";
-import { registerSchema } from "../validators/auth.validator.js";
+import { loginSchema, registerSchema } from "../validators/auth.validator.js";
 import { AppError } from "../errors/AppError.js";
 import argon2 from "argon2";
 import { generateAccessToken } from "../utils/token.js";
 import { successResponse } from "../utils/response.js";
 import mongoose from "mongoose";
-import {
-  getPendingUpload,
-  deletePendingUpload,
-} from "../services/pendingUploadService.js";
+import { getPendingUpload } from "../services/pendingUploadService.js";
+
+export const loginUser = async (req, res, next) => {
+  try {
+    const validateResult = loginSchema.safeParse(req.body);
+    if (!validateResult.success) {
+      const message = validateResult.error.issues
+        .map((err) => err.message)
+        .join(", ");
+      throw new AppError(message, 400, "INVALID_LOGIN_DATA");
+    }
+
+    const { email, password } = validateResult.data;
+    const user = await User.findOne({ email })
+      .select("+passwordHash")
+      .lean();
+
+    if (
+      !user ||
+      !user.passwordHash ||
+      user.authProvider !== "local" ||
+      !user.isActive ||
+      !(await argon2.verify(user.passwordHash, password))
+    ) {
+      throw new AppError("Invalid email or password", 401, "INVALID_CREDENTIALS");
+    }
+
+    const accessToken = generateAccessToken(user._id);
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000,
+    });
+
+    return successResponse(
+      res,
+      {
+        user: {
+          id: user._id.toString(),
+          username: user.username,
+        },
+      },
+      "User logged in successfully",
+    );
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const registerUser = async (req, res, next) => {
   try {

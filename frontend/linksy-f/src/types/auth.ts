@@ -6,6 +6,11 @@ export interface RegisterPayload {
   bio?: string;
 }
 
+export interface LoginPayload {
+  email: string;
+  password: string;
+}
+
 export interface RegisteredUser {
   id: string;
   username: string;
