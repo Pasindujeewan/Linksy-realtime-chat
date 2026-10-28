@@ -4,14 +4,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("../src/models/user.model.js", () => ({
   default: { findOne: vi.fn(), create: vi.fn() },
 }));
-vi.mock("argon2", () => ({ default: { hash: vi.fn() } }));
+vi.mock("argon2", () => ({
+  default: { hash: vi.fn(), verify: vi.fn() },
+}));
 vi.mock("../src/utils/token.js", () => ({
   generateAccessToken: vi.fn(() => "signed-token"),
 }));
 
 import User from "../src/models/user.model.js";
 import argon2 from "argon2";
-import { registerUser } from "../src/controllers/auth.controller.js";
+import {
+  loginUser,
+  registerUser,
+} from "../src/controllers/auth.controller.js";
 
 const validBody = {
   username: "linksy_user",
@@ -105,5 +110,90 @@ describe("registerUser", () => {
       }),
     );
     expect(next).not.toHaveBeenCalled();
+  });
+});
+
+describe("loginUser", () => {
+  const loginBody = {
+    email: "USER@example.com",
+    password: "password123",
+  };
+  const localUser = {
+    _id: "user-123",
+    username: "linksy_user",
+    email: "user@example.com",
+    passwordHash: "hashed-password",
+    authProvider: "local",
+    isActive: true,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("verifies the password, sets an access cookie, and returns the user", async () => {
+    const lean = vi.fn().mockResolvedValue(localUser);
+    const select = vi.fn().mockReturnValue({ lean });
+    User.findOne.mockReturnValue({ select });
+    argon2.verify.mockResolvedValue(true);
+    const res = makeResponse();
+    const next = vi.fn();
+
+    await loginUser({ body: loginBody }, res, next);
+
+    expect(User.findOne).toHaveBeenCalledWith({ email: "user@example.com" });
+    expect(select).toHaveBeenCalledWith("+passwordHash");
+    expect(argon2.verify).toHaveBeenCalledWith(
+      localUser.passwordHash,
+      loginBody.password,
+    );
+    expect(res.cookie).toHaveBeenCalledWith(
+      "accessToken",
+      "signed-token",
+      expect.objectContaining({ httpOnly: true, sameSite: "strict" }),
+    );
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: true,
+        data: {
+          user: { id: "user-123", username: "linksy_user" },
+        },
+      }),
+    );
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("returns the same unauthorized error for an incorrect password", async () => {
+    const lean = vi.fn().mockResolvedValue(localUser);
+    User.findOne.mockReturnValue({
+      select: vi.fn().mockReturnValue({ lean }),
+    });
+    argon2.verify.mockResolvedValue(false);
+    const next = vi.fn();
+
+    await loginUser({ body: loginBody }, makeResponse(), next);
+
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        statusCode: 401,
+        code: "INVALID_CREDENTIALS",
+        message: "Invalid email or password",
+      }),
+    );
+  });
+
+  it("rejects malformed login data before querying users", async () => {
+    const next = vi.fn();
+
+    await loginUser(
+      { body: { email: "not-an-email", password: "short" } },
+      makeResponse(),
+      next,
+    );
+
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({ statusCode: 400, code: "INVALID_LOGIN_DATA" }),
+    );
+    expect(User.findOne).not.toHaveBeenCalled();
   });
 });
