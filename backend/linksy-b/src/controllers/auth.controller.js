@@ -2,10 +2,22 @@ import User from "../models/user.model.js";
 import { loginSchema, registerSchema } from "../validators/auth.validator.js";
 import { AppError } from "../errors/AppError.js";
 import argon2 from "argon2";
-import { generateAccessToken } from "../utils/token.js";
+import jwt from "jsonwebtoken";
+import { env } from "../config/env.js";
+import {
+  generateAccessToken,
+  getAccessTokenBlacklistKey,
+} from "../utils/token.js";
 import { successResponse } from "../utils/response.js";
 import mongoose from "mongoose";
 import { getPendingUpload } from "../services/pendingUploadService.js";
+import { setValue } from "../utils/redisUtils.js";
+
+const accessTokenCookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict",
+};
 
 export const loginUser = async (req, res, next) => {
   try {
@@ -124,6 +136,40 @@ export const registerUser = async (req, res, next) => {
     );
   } catch (error) {
     console.error(error);
+    next(error);
+  }
+};
+
+export const logoutUser = async (req, res, next) => {
+  try {
+    const accessToken = req.cookies?.accessToken;
+
+    if (accessToken) {
+      let payload;
+
+      try {
+        payload = jwt.verify(accessToken, env.JWT_ACCESS_SECRET);
+      } catch (error) {
+        if (!(error instanceof jwt.JsonWebTokenError)) {
+          throw error;
+        }
+      }
+
+      if (payload && typeof payload !== "string" && payload.exp) {
+        const ttlSeconds = Math.ceil(payload.exp - Date.now() / 1000);
+        if (ttlSeconds > 0) {
+          await setValue(
+            getAccessTokenBlacklistKey(accessToken),
+            "1",
+            ttlSeconds,
+          );
+        }
+      }
+    }
+
+    res.clearCookie("accessToken", accessTokenCookieOptions);
+    return successResponse(res, null, "User logged out successfully");
+  } catch (error) {
     next(error);
   }
 };

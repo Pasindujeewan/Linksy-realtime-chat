@@ -6,7 +6,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { getUserProfile } from "../services/authService";
+import {
+  getUserProfile,
+  logoutUser as requestLogoutUser,
+} from "../services/authService";
 import type { RegisteredUser, UserProfile } from "../types/auth";
 import { useToast } from "./ToastContext";
 
@@ -17,6 +20,7 @@ interface UserContextValue {
   isLoadingProfile: boolean;
   setAuthenticatedUser: (user: RegisteredUser) => void;
   clearAuthenticatedUser: () => void;
+  logout: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextValue | null>(null);
@@ -102,6 +106,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const logout = useCallback(async () => {
+    await requestLogoutUser();
+    // Keep local auth state until the server confirms the token was revoked.
+    clearAuthenticatedUser();
+  }, [clearAuthenticatedUser]);
+
   return (
     <UserContext.Provider
       value={{
@@ -109,6 +119,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         isLoadingProfile,
         setAuthenticatedUser,
         clearAuthenticatedUser,
+        logout,
       }}
     >
       {children}
