@@ -78,6 +78,20 @@ export async function loginUser(payload: LoginPayload): Promise<RegisteredUser> 
   return result.data.user;
 }
 
+export async function logoutUser(): Promise<void> {
+  const response = await fetch(`${apiUrl}/api/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+
+  const result = (await response.json()) as ApiResponse<null>;
+  if (!response.ok || !result.success) {
+    throw new Error(
+      result.message || "We couldn't log you out. Please try again.",
+    );
+  }
+}
+
 export async function getUserProfile(userId: string): Promise<UserProfile> {
   const response = await fetch(
     `${apiUrl}/api/user/me/${encodeURIComponent(userId)}`,

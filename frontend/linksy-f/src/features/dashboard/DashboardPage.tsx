@@ -1,14 +1,37 @@
-import { MessageCircle, UserRound } from "lucide-react";
+import { LogOut, MessageCircle, UserRound } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router";
 import ChatUserList from "./ChatUserList";
 import { useUser } from "../../contexts/UserContext";
+import { useToast } from "../../contexts/ToastContext";
 
 export default function DashboardPage() {
-  const { user, isLoadingProfile } = useUser();
+  const { user, isLoadingProfile, logout } = useUser();
+  const navigate = useNavigate();
+  const toast = useToast();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   if (!user) return null;
 
   const displayName = user.username;
   const avatarUrl = user.avatarUrl;
+
+  async function handleLogout() {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      toast.success("You’ve been logged out.");
+      navigate("/login", { replace: true });
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "We couldn't log you out. Please try again.",
+      );
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -45,6 +68,15 @@ export default function DashboardPage() {
                 <UserRound aria-hidden="true" className="h-5 w-5" />
               </span>
             )}
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <LogOut aria-hidden="true" className="h-4 w-4" />
+              {isLoggingOut ? "Logging out…" : "Log out"}
+            </button>
           </div>
         </div>
       </header>
