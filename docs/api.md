@@ -2,7 +2,7 @@
 
 Base URL: `http://localhost:<PORT>` (the default port is `5000`).
 
-All request/response bodies are JSON unless otherwise noted. The API supports local authentication, profile image upload, and protected profile reads.
+All request/response bodies are JSON unless otherwise noted. The API supports local and Google authentication, profile image upload, and protected profile reads.
 
 ## Common response format
 
@@ -28,14 +28,14 @@ Errors use:
 
 ## Authentication / cookies
 
-The API sets an `accessToken` cookie on successful login and registration. The cookie is:
+The API sets an `accessToken` cookie on successful login, Google sign-in, and registration. The cookie is:
 
 - `httpOnly: true`
 - `sameSite: "strict"`
 - `secure: true` in production
 - `maxAge: 15 minutes`
 
-Protected routes may read the token from the cookie or from the `Authorization: Bearer <token>` header.
+Protected routes accept the token from the `accessToken` cookie or an `Authorization: Bearer <access-token>` header.
 
 ## 1) Upload a profile image
 
@@ -75,7 +75,7 @@ Status: `200 OK`
 
 Notes:
 
-- Supported types: `image/jpeg`, `image/png`, `image/webp`, `image/gif`
+- Supported types: `image/jpeg`, `image/png`, `image/webp`
 - Max file size: `5 MB`
 - `uploadToken` is meant to be sent as `imageToken` in the registration payload
 
@@ -84,7 +84,8 @@ Notes:
 | Status | Code | When |
 | --- | --- | --- |
 | `400 Bad Request` | `NO_FILE_UPLOADED` | No image file was sent |
-| `400 Bad Request` | `INVALID_IMAGE` | Image validation failed |
+| `400 Bad Request` | `INVALID_FILE_UPLOAD` | The upload is missing a file buffer or MIME type |
+| `400 Bad Request` | `UNSUPPORTED_FILE_TYPE` | The image is not JPEG, PNG, or WEBP |
 
 ## 2) Register a user
 
@@ -142,7 +143,51 @@ The response also sets an `accessToken` cookie. Password hashes and plaintext pa
 | `409 Conflict` | `USER_ALREADY_EXSIT` | Email or username already exists |
 | `500 Internal Server Error` | `INTERNAL_ERROR` | Unexpected server error |
 
-## 3) Log in
+## 3) Sign in with Google
+
+`POST /api/auth/google`
+
+Verifies a Firebase ID token for a verified Google account. If the Google account is new, the API creates a user automatically. An existing account with the same email that was not created through Google cannot be linked automatically.
+
+### Request body
+
+```json
+{
+  "idToken": "<firebase-id-token>"
+}
+```
+
+### Success response
+
+Status: `200 OK`
+
+```json
+{
+  "success": true,
+  "message": "User logged in successfully",
+  "data": {
+    "user": {
+      "id": "<user-id>",
+      "username": "linksy_user"
+    }
+  }
+}
+```
+
+The server also sets the `accessToken` cookie.
+
+### Errors
+
+| Status | Code | When |
+| --- | --- | --- |
+| `400 Bad Request` | `INVALID_GOOGLE_AUTH_DATA` | Request body is missing or has an invalid `idToken` |
+| `401 Unauthorized` | `INVALID_FIREBASE_TOKEN` | Firebase ID token is invalid or expired |
+| `401 Unauthorized` | `INVALID_GOOGLE_ACCOUNT` | Token is not for a verified Google account |
+| `403 Forbidden` | `ACCOUNT_INACTIVE` | The Google account is inactive |
+| `409 Conflict` | `ACCOUNT_ALREADY_EXISTS` | Email belongs to a non-Google account |
+| `409 Conflict` | `USERNAME_UNAVAILABLE` | A unique username could not be generated |
+
+## 4) Log in
 
 `POST /api/auth/login`
 
@@ -183,11 +228,11 @@ The server also sets the `accessToken` cookie.
 | `400 Bad Request` | `INVALID_LOGIN_DATA` | Request body fails validation |
 | `401 Unauthorized` | `INVALID_CREDENTIALS` | Email/password are incorrect |
 
-## 4) Log out
+## 5) Log out
 
 `POST /api/auth/logout`
 
-Logs the user out and revokes the current access token.
+Logs the user out and revokes the current access token from the `accessToken` cookie, if present. This endpoint does not require a request body.
 
 ### Request
 
@@ -205,14 +250,9 @@ Status: `200 OK`
 }
 ```
 
-### Errors
+An invalid or expired cookie is ignored; the endpoint still clears the cookie. Unexpected server or Redis errors are returned as `500 Internal Server Error`.
 
-| Status | Code | When |
-| --- | --- | --- |
-| `401 Unauthorized` | `INVALID_ACCESS_TOKEN` | Token is invalid or expired |
-| `500 Internal Server Error` | `INTERNAL_ERROR` | Unexpected server error |
-
-## 5) Get current user profile
+## 6) Get user profile
 
 `GET /api/user/me/:userId`
 
@@ -220,7 +260,7 @@ Fetches the user profile by id. This endpoint requires authentication.
 
 ### Request
 
-- Header: `Authorization: Bearer <token>` OR cookie-based `accessToken`
+- Header: `Authorization: Bearer <access-token>` or the `accessToken` cookie
 
 ### Success response
 
@@ -235,7 +275,7 @@ Status: `200 OK`
     "username": "linksy_user",
     "email": "user@example.com",
     "bio": "Hello, Linksy!",
-    "avatarUrl": "profile-pending/<file-key>",
+    "avatarUrl": "<signed-image-url-valid-for-5-minutes>",
     "isActive": true,
     "lastSeenAt": null,
     "createdAt": "2025-01-10T12:00:00.000Z",
@@ -248,7 +288,7 @@ Status: `200 OK`
 
 | Status | Code | When |
 | --- | --- | --- |
-| `400 Bad Request` | `USER_ID_REQUIRED` | Missing user id |
+| `404 Not Found` | `USER_NOT_FOUND` | No user exists with the requested ID |
 | `401 Unauthorized` | `UNAUTHORIZED` | Token is missing |
 | `401 Unauthorized` | `INVALID_ACCESS_TOKEN` | Token is invalid or expired |
 | `401 Unauthorized` | `TOKEN_REVOKED` | Token has been blacklisted on logout |

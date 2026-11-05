@@ -9,7 +9,7 @@ const validRegistration = {
   username: "linksy_user",
   email: "User@Example.com",
   password: "password123",
-  avatarUrl: "https://example.com/avatar.png",
+  imageToken: "upload-token",
 };
 
 // Test suite for the registerSchema validation
