@@ -1,5 +1,9 @@
 import User from "../models/user.model.js";
-import { loginSchema, registerSchema } from "../validators/auth.validator.js";
+import {
+  googleAuthSchema,
+  loginSchema,
+  registerSchema,
+} from "../validators/auth.validator.js";
 import { AppError } from "../errors/AppError.js";
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
@@ -12,6 +16,7 @@ import { successResponse } from "../utils/response.js";
 import mongoose from "mongoose";
 import { getPendingUpload } from "../services/pendingUploadService.js";
 import { setValue } from "../utils/redisUtils.js";
+import { authenticateGoogleUser } from "../services/googleAuthService.js";
 
 const accessTokenCookieOptions = {
   httpOnly: true,
@@ -45,6 +50,41 @@ export const loginUser = async (req, res, next) => {
     }
 
     const accessToken = generateAccessToken(user._id);
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000,
+    });
+
+    return successResponse(
+      res,
+      {
+        user: {
+          id: user._id.toString(),
+          username: user.username,
+        },
+      },
+      "User logged in successfully",
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const googleAuth = async (req, res, next) => {
+  try {
+    const validateResult = googleAuthSchema.safeParse(req.body);
+    if (!validateResult.success) {
+      const message = validateResult.error.issues
+        .map((err) => err.message)
+        .join(", ");
+      throw new AppError(message, 400, "INVALID_GOOGLE_AUTH_DATA");
+    }
+
+    const user = await authenticateGoogleUser(validateResult.data.idToken);
+    const accessToken = generateAccessToken(user._id);
+
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
