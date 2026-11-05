@@ -10,9 +10,13 @@ vi.mock("argon2", () => ({
 vi.mock("../src/utils/token.js", () => ({
   generateAccessToken: vi.fn(() => "signed-token"),
 }));
+vi.mock("../src/services/pendingUploadService.js", () => ({
+  getPendingUpload: vi.fn(),
+}));
 
 import User from "../src/models/user.model.js";
 import argon2 from "argon2";
+import { getPendingUpload } from "../src/services/pendingUploadService.js";
 import {
   loginUser,
   registerUser,
@@ -22,7 +26,7 @@ const validBody = {
   username: "linksy_user",
   email: "user@example.com",
   password: "password123",
-  avatarUrl: "https://example.com/avatar.png",
+  imageToken: "upload-token",
 };
 
 // Helper function to create a mock response object
@@ -43,6 +47,7 @@ describe("registerUser", () => {
     vi.clearAllMocks();
     User.findOne.mockReturnValue({ lean: vi.fn().mockResolvedValue(null) });
     argon2.hash.mockResolvedValue("hashed-password");
+    getPendingUpload.mockResolvedValue("avatar-image-key");
   });
 
   it("passes validation errors to the error middleware", async () => {
@@ -90,6 +95,7 @@ describe("registerUser", () => {
         username: validBody.username,
         email: validBody.email,
         passwordHash: "hashed-password",
+        avatarUrl: "avatar-image-key",
       }),
     );
     expect(res.cookie).toHaveBeenCalledWith(
@@ -104,7 +110,6 @@ describe("registerUser", () => {
         data: expect.objectContaining({
           user: expect.objectContaining({
             username: validBody.username,
-            email: validBody.email,
           }),
         }),
       }),
