@@ -7,6 +7,7 @@ import {
   UPLOAD_TTL_SECONDS,
 } from "./pendingUploadService.js";
 
+// Service for handling profile image uploads
 export async function uploadProfileImage(file) {
   const extension = validateImage(file);
 
@@ -28,6 +29,7 @@ export async function uploadProfileImage(file) {
     throw error;
   }
 
+  // Return the upload token and expiration time for the pending upload
   return {
     uploadToken,
     expiresIn: UPLOAD_TTL_SECONDS,

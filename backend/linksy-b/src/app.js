@@ -6,6 +6,7 @@ import authRouter from "../src/routes/auth.route.js";
 import { errorHandler } from "./middleware/errorHandler.middleware.js";
 import { notFoundHandler } from "./middleware/notFound.middleware.js";
 import uploadRouter from "./routes/upload.route.js";
+import userRouter from "./routes/user.route.js";
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use(express.json());
 // Routes
 app.use("/api/auth", authRouter);
 app.use("/api/upload", uploadRouter);
+app.use("/api/user", userRouter);
 
 // Error handling middleware
 app.use(notFoundHandler);

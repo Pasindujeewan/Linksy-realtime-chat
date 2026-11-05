@@ -4,9 +4,17 @@ interface FormFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
   error?: string;
   leading?: ReactNode;
+  trailing?: ReactNode;
 }
 
-export default function FormField({ label, error, leading, id, ...inputProps }: FormFieldProps) {
+export default function FormField({
+  label,
+  error,
+  leading,
+  trailing,
+  id,
+  ...inputProps
+}: FormFieldProps) {
   const inputId = id ?? inputProps.name;
 
   return (
@@ -21,6 +29,7 @@ export default function FormField({ label, error, leading, id, ...inputProps }: 
           className="min-w-0 flex-1 bg-transparent py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400"
           {...inputProps}
         />
+        {trailing}
       </div>
       {error && <p id={`${inputId}-error`} className="text-xs text-rose-600">{error}</p>}
     </div>

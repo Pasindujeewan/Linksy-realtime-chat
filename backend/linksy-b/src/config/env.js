@@ -13,6 +13,9 @@ const envSchema = z.object({
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
   REDIS_URL: z.string().url(),
+  FIREBASE_PROJECT_ID: z.string().default(""),
+  FIREBASE_CLIENT_EMAIL: z.string().default(""),
+  FIREBASE_PRIVATE_KEY: z.string().default(""),
 });
 
 const result = envSchema.safeParse(process.env);

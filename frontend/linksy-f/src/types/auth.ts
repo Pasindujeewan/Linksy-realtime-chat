@@ -2,15 +2,23 @@ export interface RegisterPayload {
   username: string;
   email: string;
   password: string;
-  avatarUrl: string;
+  imageToken: string;
   bio?: string;
+}
+
+export interface LoginPayload {
+  email: string;
+  password: string;
 }
 
 export interface RegisteredUser {
   id: string;
   username: string;
-  email: string;
-  avatarUrl: string;
+}
+
+export interface UserProfile extends RegisteredUser {
+  email?: string;
+  avatarUrl?: string | null;
   bio?: string;
 }
 
