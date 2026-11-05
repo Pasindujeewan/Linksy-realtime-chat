@@ -1,7 +1,10 @@
 import LoginForm from "./LoginForm";
 import { useLoginForm } from "./useLoginForm";
+import GoogleSignInOption from "../shared/GoogleSignInOption";
+import { useGoogleSignIn } from "../shared/useGoogleSignIn";
 
 export default function LoginPage() {
+  const { handleGoogleSignIn, isSigningIn } = useGoogleSignIn();
   const {
     errors,
     handleEmailChange,
@@ -34,9 +37,14 @@ export default function LoginPage() {
             Sign in to pick up where your conversations left off.
           </p>
         </div>
+        <GoogleSignInOption
+          disabled={isSubmitting}
+          isSigningIn={isSigningIn}
+          onClick={handleGoogleSignIn}
+        />
         <LoginForm
           errors={errors}
-          isSubmitting={isSubmitting}
+          isSubmitting={isSubmitting || isSigningIn}
           onEmailChange={handleEmailChange}
           onPasswordChange={handlePasswordChange}
           onSubmit={handleSubmit}

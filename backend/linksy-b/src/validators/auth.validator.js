@@ -15,6 +15,12 @@ export const loginSchema = z
   })
   .strict();
 
+export const googleAuthSchema = z
+  .object({
+    idToken: z.string().trim().min(1).max(8192),
+  })
+  .strict();
+
 export const registerSchema = z
   .object({
     username: z

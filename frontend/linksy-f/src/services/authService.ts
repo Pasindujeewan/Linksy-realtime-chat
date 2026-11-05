@@ -78,6 +78,24 @@ export async function loginUser(payload: LoginPayload): Promise<RegisteredUser> 
   return result.data.user;
 }
 
+export async function loginWithGoogle(idToken: string): Promise<RegisteredUser> {
+  const response = await fetch(`${apiUrl}/api/auth/google`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ idToken }),
+  });
+
+  const result = (await response.json()) as ApiResponse<{ user?: RegisteredUser }>;
+  if (!response.ok || !result.success || !result.data?.user) {
+    throw new Error(
+      result.message || "We couldn't sign you in with Google. Please try again.",
+    );
+  }
+
+  return result.data.user;
+}
+
 export async function logoutUser(): Promise<void> {
   const response = await fetch(`${apiUrl}/api/auth/logout`, {
     method: "POST",
