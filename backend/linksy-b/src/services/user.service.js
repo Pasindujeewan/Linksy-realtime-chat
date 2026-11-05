@@ -10,7 +10,9 @@ export const getUserById = async (userId) => {
       throw new AppError("User not found", 404, "USER_NOT_FOUND");
     }
     console.log("User found:", user);
-    const avatarUrl = await generateImageUrl(user.avatarUrl);
+    const avatarUrl = user.avatarUrl
+      ? await generateImageUrl(user.avatarUrl)
+      : null;
 
     return {
       ...user,

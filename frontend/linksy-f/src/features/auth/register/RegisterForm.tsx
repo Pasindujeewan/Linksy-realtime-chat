@@ -13,6 +13,7 @@ interface RegisterFormProps {
   avatarPreview: string;
   avatarStatus: AvatarUploadStatus;
   errors: RegisterFieldErrors;
+  isGoogleSigningIn: boolean;
   isSubmitting: boolean;
   onAvatarChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onFieldChange: <K extends keyof RegisterFields>(
@@ -27,6 +28,7 @@ export default function RegisterForm({
   avatarPreview,
   avatarStatus,
   errors,
+  isGoogleSigningIn,
   isSubmitting,
   onAvatarChange,
   onFieldChange,
@@ -115,14 +117,16 @@ export default function RegisterForm({
         </div>
         <button
           type="submit"
-          disabled={isSubmitting || isUploadingAvatar}
+          disabled={isSubmitting || isUploadingAvatar || isGoogleSigningIn}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isUploadingAvatar
-            ? "Uploading profile picture…"
-            : isSubmitting
-              ? "Creating your account…"
-              : "Create account"}
+          {isGoogleSigningIn
+            ? "Signing in with Google…"
+            : isUploadingAvatar
+              ? "Uploading profile picture…"
+              : isSubmitting
+                ? "Creating your account…"
+                : "Create account"}
           {!isSubmitting && <span aria-hidden="true">→</span>}
         </button>
       </form>

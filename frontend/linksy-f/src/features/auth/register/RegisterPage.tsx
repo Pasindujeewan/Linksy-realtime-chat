@@ -1,8 +1,11 @@
 import RegisterForm from "./RegisterForm";
 import RegisterHero from "./RegisterHero";
 import { useRegisterForm } from "./useRegisterForm";
+import GoogleSignInOption from "../shared/GoogleSignInOption";
+import { useGoogleSignIn } from "../shared/useGoogleSignIn";
 
 export default function RegisterPage() {
+  const { handleGoogleSignIn, isSigningIn } = useGoogleSignIn();
   const {
     avatarPreview,
     avatarStatus,
@@ -40,11 +43,17 @@ export default function RegisterPage() {
             </p>
           </div>
 
+          <GoogleSignInOption
+            disabled={isSubmitting || avatarStatus === "uploading"}
+            isSigningIn={isSigningIn}
+            onClick={handleGoogleSignIn}
+          />
           <RegisterForm
             avatarPreview={avatarPreview}
             avatarStatus={avatarStatus}
             errors={errors}
             isSubmitting={isSubmitting}
+            isGoogleSigningIn={isSigningIn}
             onAvatarChange={handleAvatarChange}
             onFieldChange={update}
             onSubmit={handleSubmit}
