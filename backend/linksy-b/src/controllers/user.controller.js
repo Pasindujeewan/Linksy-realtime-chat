@@ -1,9 +1,6 @@
 import { AppError } from "../errors/AppError.js";
 import { successResponse } from "../utils/response.js";
-import {
-  getUserById,
-  updateUserById,
-} from "../services/user.service.js";
+import { getUserById, updateUserById } from "../services/user.service.js";
 import { updateUserProfileSchema } from "../validators/auth.validator.js";
 
 // Controller for handling user profile retrieval
@@ -30,7 +27,7 @@ export const updateUserProfile = async (req, res, next) => {
         "FORBIDDEN",
       );
     }
-
+    console.log("Request body:", req.body); // Log the request body for debugging
     const validateResult = updateUserProfileSchema.safeParse(req.body);
     if (!validateResult.success) {
       const message = validateResult.error.issues

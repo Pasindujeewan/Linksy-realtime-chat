@@ -11,9 +11,13 @@ import ProfilePage from "./ProfilePage";
 vi.mock("../../services/authService", () => ({
   getUserProfile: vi.fn(),
   logoutUser: vi.fn(),
+  updateUserProfile: vi.fn(),
 }));
 
+import { updateUserProfile } from "../../services/authService";
+
 const mockedGetUserProfile = vi.mocked(getUserProfile);
+const mockedUpdateUserProfile = vi.mocked(updateUserProfile);
 
 describe("profile navigation", () => {
   beforeEach(() => {
@@ -29,6 +33,13 @@ describe("profile navigation", () => {
       avatarUrl: "https://cdn.example.com/avatar.png",
       bio: "Hello there",
     });
+    mockedUpdateUserProfile.mockImplementation(async (_userId, payload) => ({
+      id: "user-1",
+      username: payload.username ?? "alex_morgan",
+      email: payload.email ?? "alex@example.com",
+      avatarUrl: "https://cdn.example.com/avatar.png",
+      bio: payload.bio,
+    }));
   });
 
   it("opens the loaded user profile when the dashboard avatar is clicked", async () => {
@@ -56,5 +67,39 @@ describe("profile navigation", () => {
       "https://cdn.example.com/avatar.png",
     );
     expect(mockedGetUserProfile).toHaveBeenCalledWith("user-1");
+  });
+
+  it("saves editable profile fields and displays the returned profile", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <ToastProvider>
+        <UserProvider>
+          <MemoryRouter initialEntries={["/profile"]}>
+            <Routes>
+              <Route path="/profile" element={<ProfilePage />} />
+            </Routes>
+          </MemoryRouter>
+        </UserProvider>
+      </ToastProvider>,
+    );
+
+    expect(await screen.findByText("alex@example.com")).toBeInTheDocument();
+    await user.click(await screen.findByRole("button", { name: "Edit profile" }));
+    const usernameInput = screen.getByRole("textbox", { name: "Username" });
+    await user.clear(usernameInput);
+    await user.type(usernameInput, "alex_updated");
+    const bioInput = screen.getByRole("textbox", { name: /About/ });
+    await user.clear(bioInput);
+    await user.type(bioInput, "Updated bio");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(await screen.findByText("alex_updated")).toBeInTheDocument();
+    expect(screen.getByText("Updated bio")).toBeInTheDocument();
+    expect(mockedUpdateUserProfile).toHaveBeenCalledWith("user-1", {
+      username: "alex_updated",
+      email: "alex@example.com",
+      bio: "Updated bio",
+    });
   });
 });

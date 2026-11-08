@@ -1,11 +1,49 @@
 import { ArrowLeft, UserRound } from "lucide-react";
+import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
+import type { UpdateUserProfilePayload } from "../../types/auth";
 import { useUser } from "../../contexts/UserContext";
+import { useToast } from "../../contexts/ToastContext";
 
 export default function ProfilePage() {
-  const { user, isLoadingProfile } = useUser();
+  const { user, isLoadingProfile, updateUserProfile } = useUser();
+  const toast = useToast();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [draft, setDraft] = useState<UpdateUserProfilePayload>({
+    username: "",
+    email: "",
+    bio: "",
+  });
 
   if (!user) return null;
+
+  function handleEdit() {
+    setDraft({
+      username: user.username,
+      email: user.email ?? "",
+      bio: user.bio ?? "",
+    });
+    setIsEditing(true);
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSaving(true);
+    try {
+      await updateUserProfile(draft);
+      setIsEditing(false);
+      toast.success("Your profile has been updated.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "We couldn't update your profile. Please try again.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -35,10 +73,7 @@ export default function ProfilePage() {
           </p>
         )}
 
-        <section
-          aria-label="Profile details"
-          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-        >
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <div className="flex items-center gap-5 border-b border-slate-100 pb-6">
             {user.avatarUrl ? (
               <img
@@ -63,26 +98,106 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <dl className="divide-y divide-slate-100">
-            <div className="py-5">
-              <dt className="text-sm font-medium text-slate-500">Username</dt>
-              <dd className="mt-1 text-sm text-slate-900">{user.username}</dd>
-            </div>
-            {user.email && (
-              <div className="py-5">
-                <dt className="text-sm font-medium text-slate-500">Email</dt>
-                <dd className="mt-1 text-sm text-slate-900">{user.email}</dd>
+          {isEditing ? (
+            <form onSubmit={handleSubmit} className="pt-6">
+              <div className="space-y-5">
+                <label className="block text-sm font-medium text-slate-700">
+                  Username
+                  <input
+                    required
+                    minLength={3}
+                    maxLength={20}
+                    pattern="[a-zA-Z0-9_]+"
+                    autoComplete="username"
+                    value={draft.username}
+                    onChange={(event) =>
+                      setDraft({ ...draft, username: event.target.value })
+                    }
+                    className="mt-1.5 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </label>
+                <label className="block text-sm font-medium text-slate-700">
+                  Email
+                  <input
+                    required
+                    type="email"
+                    maxLength={254}
+                    autoComplete="email"
+                    value={draft.email}
+                    onChange={(event) =>
+                      setDraft({ ...draft, email: event.target.value })
+                    }
+                    className="mt-1.5 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </label>
+                <label className="block text-sm font-medium text-slate-700">
+                  About
+                  <textarea
+                    maxLength={160}
+                    rows={4}
+                    value={draft.bio}
+                    onChange={(event) =>
+                      setDraft({ ...draft, bio: event.target.value })
+                    }
+                    className="mt-1.5 block w-full resize-y rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <span className="mt-1 block text-xs font-normal text-slate-500">
+                    Up to 160 characters.
+                  </span>
+                </label>
               </div>
-            )}
-            {user.bio && (
-              <div className="py-5">
-                <dt className="text-sm font-medium text-slate-500">About</dt>
-                <dd className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-900">
-                  {user.bio}
-                </dd>
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  disabled={isSaving}
+                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSaving || isLoadingProfile}
+                  className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isSaving ? "Saving…" : "Save changes"}
+                </button>
               </div>
-            )}
-          </dl>
+            </form>
+          ) : (
+            <>
+              <dl aria-label="Profile details" className="divide-y divide-slate-100">
+                <div className="py-5">
+                  <dt className="text-sm font-medium text-slate-500">Username</dt>
+                  <dd className="mt-1 text-sm text-slate-900">{user.username}</dd>
+                </div>
+                {user.email && (
+                  <div className="py-5">
+                    <dt className="text-sm font-medium text-slate-500">Email</dt>
+                    <dd className="mt-1 text-sm text-slate-900">{user.email}</dd>
+                  </div>
+                )}
+                {user.bio && (
+                  <div className="py-5">
+                    <dt className="text-sm font-medium text-slate-500">About</dt>
+                    <dd className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-900">
+                      {user.bio}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+              <div className="mt-6 flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleEdit}
+                  disabled={isLoadingProfile}
+                  className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Edit profile
+                </button>
+              </div>
+            </>
+          )}
         </section>
       </div>
     </main>

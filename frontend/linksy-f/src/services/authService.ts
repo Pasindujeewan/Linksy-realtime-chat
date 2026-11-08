@@ -3,6 +3,7 @@ import type {
   LoginPayload,
   RegisterPayload,
   RegisteredUser,
+  UpdateUserProfilePayload,
   UserProfile,
 } from "../types/auth";
 
@@ -124,6 +125,39 @@ export async function getUserProfile(userId: string): Promise<UserProfile> {
   const id = result.data.id ?? result.data._id;
   if (!id || !result.data.username) {
     throw new Error("The profile response is missing required user details.");
+  }
+
+  return {
+    id,
+    username: result.data.username,
+    email: result.data.email,
+    avatarUrl: result.data.avatarUrl,
+    bio: result.data.bio,
+  };
+}
+
+export async function updateUserProfile(
+  userId: string,
+  payload: UpdateUserProfilePayload,
+): Promise<UserProfile> {
+  const response = await fetch(
+    `${apiUrl}/api/user/me/${encodeURIComponent(userId)}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    },
+  );
+  const result = (await response.json()) as ApiResponse<BackendUserProfile>;
+
+  if (!response.ok || !result.success || !result.data) {
+    throw new Error(result.message || "We couldn't update your profile.");
+  }
+
+  const id = result.data.id ?? result.data._id;
+  if (!id || !result.data.username) {
+    throw new Error("The updated profile response is missing required user details.");
   }
 
   return {

@@ -22,6 +22,12 @@ export interface UserProfile extends RegisteredUser {
   bio?: string;
 }
 
+export interface UpdateUserProfilePayload {
+  username?: string;
+  email?: string;
+  bio?: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
