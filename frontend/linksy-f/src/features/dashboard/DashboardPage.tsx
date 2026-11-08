@@ -1,6 +1,6 @@
 import { LogOut, MessageCircle, UserRound } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import ChatUserList from "./ChatUserList";
 import { useUser } from "../../contexts/UserContext";
 import { useToast } from "../../contexts/ToastContext";
@@ -37,15 +37,15 @@ export default function DashboardPage() {
     <main className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <a
-            href="/dashboard"
+          <Link
+            to="/dashboard"
             className="flex items-center gap-2.5 text-lg font-bold tracking-tight text-indigo-700"
           >
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-indigo-600 text-white">
               <MessageCircle aria-hidden="true" className="h-5 w-5" />
             </span>
             linksy
-          </a>
+          </Link>
           <div className="flex items-center gap-3">
             <div className="hidden text-right sm:block">
               <p className="text-sm font-semibold text-slate-800">
@@ -53,21 +53,27 @@ export default function DashboardPage() {
               </p>
               <p className="text-xs text-slate-500">Your account</p>
             </div>
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={`${displayName}'s profile`}
-                className="h-10 w-10 rounded-full border border-slate-200 object-cover"
-              />
-            ) : (
-              <span
-                role="img"
-                aria-label={`${displayName}'s profile`}
-                className="grid h-10 w-10 place-items-center rounded-full bg-indigo-50 text-indigo-500"
-              >
-                <UserRound aria-hidden="true" className="h-5 w-5" />
-              </span>
-            )}
+            <Link
+              to="/profile"
+              aria-label="View your profile"
+              title="View your profile"
+              className="rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            >
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt=""
+                  className="h-10 w-10 rounded-full border border-slate-200 object-cover"
+                />
+              ) : (
+                <span
+                  aria-hidden="true"
+                  className="grid h-10 w-10 place-items-center rounded-full bg-indigo-50 text-indigo-500"
+                >
+                  <UserRound className="h-5 w-5" />
+                </span>
+              )}
+            </Link>
             <button
               type="button"
               onClick={handleLogout}
