@@ -1,5 +1,7 @@
 import type {
   ApiResponse,
+  UserDirectoryPage,
+  DirectoryUser,
   LoginPayload,
   RegisterPayload,
   RegisteredUser,
@@ -26,6 +28,15 @@ interface BackendUserProfile {
   email?: string;
   avatarUrl?: string | null;
   bio?: string;
+}
+
+interface BackendUserDirectoryPage {
+  users: Array<{
+    id: string;
+    username: string;
+    avatarUrl: string | null;
+  }>;
+  pagination: UserDirectoryPage["pagination"];
 }
 
 /** Uploads a profile image and returns the token required by registration. */
@@ -134,6 +145,45 @@ export async function getUserProfile(userId: string): Promise<UserProfile> {
     avatarUrl: result.data.avatarUrl,
     bio: result.data.bio,
   };
+}
+
+export async function getOtherUsers(page: number): Promise<UserDirectoryPage> {
+  const response = await fetch(
+    `${apiUrl}/api/user/others?page=${encodeURIComponent(page)}`,
+    { credentials: "include" },
+  );
+  const result =
+    (await response.json()) as ApiResponse<BackendUserDirectoryPage>;
+
+  if (!response.ok || !result.success || !result.data) {
+    throw new Error(result.message || "We couldn't load the people directory.");
+  }
+
+  const { users, pagination } = result.data;
+  if (
+    !Array.isArray(users) ||
+    !pagination ||
+    !Number.isInteger(pagination.page) ||
+    !Number.isInteger(pagination.limit) ||
+    typeof pagination.hasMore !== "boolean" ||
+    (pagination.nextPage !== null && !Number.isInteger(pagination.nextPage))
+  ) {
+    throw new Error("The people directory response is invalid.");
+  }
+
+  const profiles: DirectoryUser[] = users.map((profile) => {
+    if (
+      typeof profile.id !== "string" ||
+      typeof profile.username !== "string" ||
+      (profile.avatarUrl !== null && typeof profile.avatarUrl !== "string")
+    ) {
+      throw new Error("The people directory response is invalid.");
+    }
+
+    return profile;
+  });
+
+  return { users: profiles, pagination };
 }
 
 export async function updateUserProfile(

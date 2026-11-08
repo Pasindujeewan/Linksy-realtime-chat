@@ -28,6 +28,22 @@ export interface UpdateUserProfilePayload {
   bio?: string;
 }
 
+export interface DirectoryUser {
+  id: string;
+  username: string;
+  avatarUrl: string | null;
+}
+
+export interface UserDirectoryPage {
+  users: DirectoryUser[];
+  pagination: {
+    page: number;
+    limit: number;
+    hasMore: boolean;
+    nextPage: number | null;
+  };
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
