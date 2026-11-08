@@ -2,6 +2,8 @@ import User from "../models/user.model.js";
 import { AppError } from "../errors/AppError.js";
 import { generateImageUrl } from "../utils/generateImageUrl.js";
 
+const USERS_PER_PAGE = 10;
+
 // Get user by ID and generate a signed URL for the avatar
 export const getUserById = async (userId) => {
   try {
@@ -53,4 +55,38 @@ export const updateUserById = async (userId, updates) => {
     }
     throw error;
   }
+};
+
+export const getOtherUsers = async (userId, page) => {
+  const users = await User.find({
+    _id: { $ne: userId },
+    isActive: true,
+  })
+    .select("username avatarUrl")
+    .sort({ createdAt: -1, _id: -1 })
+    .skip((page - 1) * USERS_PER_PAGE)
+    .limit(USERS_PER_PAGE + 1)
+    .lean();
+
+  const hasMore = users.length > USERS_PER_PAGE;
+  const pageUsers = users.slice(0, USERS_PER_PAGE);
+  const profiles = await Promise.all(
+    pageUsers.map(async (user) => ({
+      id: user._id.toString(),
+      username: user.username,
+      avatarUrl: user.avatarUrl
+        ? await generateImageUrl(user.avatarUrl)
+        : null,
+    })),
+  );
+
+  return {
+    users: profiles,
+    pagination: {
+      page,
+      limit: USERS_PER_PAGE,
+      hasMore,
+      nextPage: hasMore ? page + 1 : null,
+    },
+  };
 };
