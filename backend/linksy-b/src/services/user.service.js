@@ -23,3 +23,34 @@ export const getUserById = async (userId) => {
     throw error;
   }
 };
+
+export const updateUserById = async (userId, updates) => {
+  try {
+    const user = await User.findByIdAndUpdate(userId, updates, {
+      new: true,
+      runValidators: true,
+    }).lean();
+
+    if (!user) {
+      throw new AppError("User not found", 404, "USER_NOT_FOUND");
+    }
+
+    const avatarUrl = user.avatarUrl
+      ? await generateImageUrl(user.avatarUrl)
+      : null;
+
+    return {
+      ...user,
+      avatarUrl,
+    };
+  } catch (error) {
+    if (error?.code === 11000) {
+      throw new AppError(
+        "Username or email is already in use",
+        409,
+        "USER_ALREADY_EXISTS",
+      );
+    }
+    throw error;
+  }
+};
