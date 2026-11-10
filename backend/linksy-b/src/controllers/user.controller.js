@@ -1,7 +1,9 @@
+import mongoose from "mongoose";
 import { AppError } from "../errors/AppError.js";
 import { successResponse } from "../utils/response.js";
 import {
   getOtherUsers,
+  getPublicUserProfile,
   getUserById,
   updateUserById,
 } from "../services/user.service.js";
@@ -18,6 +20,20 @@ export const getUserProfile = async (req, res, next) => {
     }
     const user = await getUserById(req.params.userId);
     successResponse(res, user, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getOtherUserProfile = async (req, res, next) => {
+  try {
+    const userId = req.params.userId;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new AppError("Invalid user ID", 400, "INVALID_USER_ID");
+    }
+
+    const user = await getPublicUserProfile(userId);
+    return successResponse(res, user, "User profile retrieved successfully");
   } catch (error) {
     next(error);
   }

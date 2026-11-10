@@ -260,7 +260,7 @@ Fetches the user profile by id. This endpoint requires authentication.
 
 ### Request
 
-- Header: `Authorization: Bearer <access-token>` or the `accessToken` cookie
+- Header: `Authorization` bearer token or the `accessToken` cookie
 
 ### Success response
 
@@ -289,6 +289,47 @@ Status: `200 OK`
 | Status | Code | When |
 | --- | --- | --- |
 | `404 Not Found` | `USER_NOT_FOUND` | No user exists with the requested ID |
+| `401 Unauthorized` | `UNAUTHORIZED` | Token is missing |
+| `401 Unauthorized` | `INVALID_ACCESS_TOKEN` | Token is invalid or expired |
+| `401 Unauthorized` | `TOKEN_REVOKED` | Token has been blacklisted on logout |
+
+## 7) Get another user's profile
+
+`GET /api/user/:userId`
+
+Fetches an active user's public profile fields. This endpoint requires authentication.
+
+### Request
+
+- Header: `Authorization: Bearer <access-token>` or the `accessToken` cookie
+- Path parameter: `userId` (MongoDB ObjectId)
+
+### Success response
+
+Status: `200 OK`
+
+```json
+{
+  "success": true,
+  "message": "User profile retrieved successfully",
+  "data": {
+    "id": "<user-id>",
+    "username": "linksy_user",
+    "email": "user@example.com",
+    "bio": "Hello, Linksy!",
+    "avatarUrl": "<signed-image-url-valid-for-5-minutes>"
+  }
+}
+```
+
+The response includes only the profile fields listed above; inactive users are not returned.
+
+### Errors
+
+| Status | Code | When |
+| --- | --- | --- |
+| `400 Bad Request` | `INVALID_USER_ID` | The path parameter is not a valid MongoDB ObjectId |
+| `404 Not Found` | `USER_NOT_FOUND` | No active user exists with the requested ID |
 | `401 Unauthorized` | `UNAUTHORIZED` | Token is missing |
 | `401 Unauthorized` | `INVALID_ACCESS_TOKEN` | Token is invalid or expired |
 | `401 Unauthorized` | `TOKEN_REVOKED` | Token has been blacklisted on logout |

@@ -26,6 +26,26 @@ export const getUserById = async (userId) => {
   }
 };
 
+export const getPublicUserProfile = async (userId) => {
+  const user = await User.findOne({ _id: userId, isActive: true })
+    .select("username email bio avatarUrl")
+    .lean();
+
+  if (!user) {
+    throw new AppError("User not found", 404, "USER_NOT_FOUND");
+  }
+
+  return {
+    id: user._id.toString(),
+    username: user.username,
+    email: user.email,
+    bio: user.bio,
+    avatarUrl: user.avatarUrl
+      ? await generateImageUrl(user.avatarUrl)
+      : null,
+  };
+};
+
 export const updateUserById = async (userId, updates) => {
   try {
     const user = await User.findByIdAndUpdate(userId, updates, {
