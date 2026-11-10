@@ -3,6 +3,7 @@ import type {
   UserDirectoryPage,
   DirectoryUser,
   LoginPayload,
+  PublicUserProfile,
   RegisterPayload,
   RegisteredUser,
   UpdateUserProfilePayload,
@@ -25,6 +26,14 @@ interface BackendUserProfile {
   id?: string;
   _id?: string;
   username: string;
+  email?: string;
+  avatarUrl?: string | null;
+  bio?: string;
+}
+
+interface BackendPublicUserProfile {
+  id?: string;
+  username?: string;
   email?: string;
   avatarUrl?: string | null;
   bio?: string;
@@ -145,6 +154,34 @@ export async function getUserProfile(userId: string): Promise<UserProfile> {
     avatarUrl: result.data.avatarUrl,
     bio: result.data.bio,
   };
+}
+
+export async function getOtherUserProfile(
+  userId: string,
+): Promise<PublicUserProfile> {
+  const response = await fetch(
+    `${apiUrl}/api/user/${encodeURIComponent(userId)}`,
+    { credentials: "include" },
+  );
+  const result =
+    (await response.json()) as ApiResponse<BackendPublicUserProfile>;
+
+  if (!response.ok || !result.success || !result.data) {
+    throw new Error(result.message || "We couldn't load this profile.");
+  }
+
+  const { id, username, email, avatarUrl, bio } = result.data;
+  if (
+    typeof id !== "string" ||
+    typeof username !== "string" ||
+    typeof email !== "string" ||
+    (avatarUrl !== null && typeof avatarUrl !== "string") ||
+    typeof bio !== "string"
+  ) {
+    throw new Error("The profile response is missing required user details.");
+  }
+
+  return { id, username, email, avatarUrl, bio };
 }
 
 export async function getOtherUsers(page: number): Promise<UserDirectoryPage> {

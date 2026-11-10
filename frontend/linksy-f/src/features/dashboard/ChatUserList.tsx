@@ -1,5 +1,6 @@
 import { UserRound, UsersRound } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router";
 import { getOtherUsers } from "../../services/authService";
 import type { DirectoryUser, UserDirectoryPage } from "../../types/auth";
 
@@ -141,25 +142,31 @@ export default function ChatUserList() {
             {users.map((user) => (
               <li
                 key={user.id}
-                className="flex items-center gap-3 rounded-xl border border-slate-200 p-4"
+                className="rounded-xl border border-slate-200 transition hover:border-indigo-200 hover:bg-indigo-50/50"
               >
-                {user.avatarUrl ? (
-                  <img
-                    src={user.avatarUrl}
-                    alt=""
-                    className="h-12 w-12 rounded-full border border-slate-200 object-cover"
-                  />
-                ) : (
-                  <span
-                    aria-hidden="true"
-                    className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-indigo-50 text-indigo-500"
-                  >
-                    <UserRound className="h-6 w-6" />
+                <Link
+                  to={`/users/${encodeURIComponent(user.id)}`}
+                  aria-label={`View ${user.username}'s profile`}
+                  className="flex items-center gap-3 rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset"
+                >
+                  {user.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt=""
+                      className="h-12 w-12 shrink-0 rounded-full border border-slate-200 object-cover"
+                    />
+                  ) : (
+                    <span
+                      aria-hidden="true"
+                      className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-indigo-50 text-indigo-500"
+                    >
+                      <UserRound className="h-6 w-6" />
+                    </span>
+                  )}
+                  <span className="truncate text-sm font-semibold text-slate-800">
+                    {user.username}
                   </span>
-                )}
-                <span className="truncate text-sm font-semibold text-slate-800">
-                  {user.username}
-                </span>
+                </Link>
               </li>
             ))}
           </ul>

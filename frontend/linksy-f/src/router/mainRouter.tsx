@@ -3,6 +3,7 @@ import RegisterPage from "../pages/RegisterPage";
 import DashboardPage from "../features/dashboard/DashboardPage";
 import LoginPage from "../features/auth/login/LoginPage";
 import ProfilePage from "../features/profile/ProfilePage";
+import OtherUserProfilePage from "../features/profile/OtherUserProfilePage";
 import ProtectedRoute from "./ProtectedRoute";
 
 export const router = createBrowserRouter([
@@ -25,6 +26,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <ProfilePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/users/:userId",
+    element: (
+      <ProtectedRoute>
+        <OtherUserProfilePage />
       </ProtectedRoute>
     ),
   },

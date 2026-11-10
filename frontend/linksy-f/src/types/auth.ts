@@ -22,6 +22,12 @@ export interface UserProfile extends RegisteredUser {
   bio?: string;
 }
 
+export interface PublicUserProfile extends RegisteredUser {
+  email: string;
+  avatarUrl: string | null;
+  bio: string;
+}
+
 export interface UpdateUserProfilePayload {
   username?: string;
   email?: string;
