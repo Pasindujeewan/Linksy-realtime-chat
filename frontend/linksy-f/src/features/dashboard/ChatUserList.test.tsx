@@ -1,13 +1,18 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getOtherUsers } from "../../services/authService";
+import {
+  getOtherUsers,
+  searchUsers,
+} from "../../services/authService";
 import ChatUserList from "./ChatUserList";
 
 vi.mock("../../services/authService", () => ({
   getOtherUsers: vi.fn(),
+  searchUsers: vi.fn(),
 }));
 
 const mockedGetOtherUsers = vi.mocked(getOtherUsers);
+const mockedSearchUsers = vi.mocked(searchUsers);
 
 describe("ChatUserList", () => {
   beforeEach(() => {
@@ -55,5 +60,30 @@ describe("ChatUserList", () => {
       "src",
       "https://cdn.example.com/jordan.png",
     );
+  });
+
+  it("searches for users as the username changes", async () => {
+    mockedGetOtherUsers.mockResolvedValue({
+      users: [],
+      pagination: {
+        page: 1,
+        limit: 10,
+        hasMore: false,
+        nextPage: null,
+      },
+    });
+    mockedSearchUsers.mockResolvedValue([
+      { id: "user-2", username: "alexander", avatarUrl: null },
+    ]);
+
+    render(<ChatUserList />);
+
+    fireEvent.change(
+      screen.getByRole("searchbox", { name: "Search users by username" }),
+      { target: { value: "alex" } },
+    );
+
+    expect(await screen.findByText("alexander")).toBeInTheDocument();
+    expect(mockedSearchUsers).toHaveBeenCalledWith("alex");
   });
 });

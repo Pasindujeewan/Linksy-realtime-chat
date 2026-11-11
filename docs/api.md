@@ -334,6 +334,54 @@ The response includes only the profile fields listed above; inactive users are n
 | `401 Unauthorized` | `INVALID_ACCESS_TOKEN` | Token is invalid or expired |
 | `401 Unauthorized` | `TOKEN_REVOKED` | Token has been blacklisted on logout |
 
+## 8) Search users by username
+
+`GET /api/user/search?username=<query>`
+
+Searches active users by a case-insensitive partial username match. The signed-in user's own profile is excluded. Results are ordered by username and limited to 10 users.
+
+### Request
+
+- Header: `Authorization` bearer token or the `accessToken` cookie
+- Query parameter: `username` (required, 1–20 characters after trimming)
+
+Example:
+
+```http
+GET /api/user/search?username=linksy
+```
+
+### Success response
+
+Status: `200 OK`
+
+```json
+{
+  "success": true,
+  "message": "Users found successfully",
+  "data": {
+    "users": [
+      {
+        "id": "<user-id>",
+        "username": "linksy_user",
+        "avatarUrl": "<signed-image-url-valid-for-5-minutes>"
+      }
+    ]
+  }
+}
+```
+
+An empty `users` array is returned when there are no matches.
+
+### Errors
+
+| Status | Code | When |
+| --- | --- | --- |
+| `400 Bad Request` | `INVALID_USERNAME_SEARCH` | `username` is missing, empty after trimming, or longer than 20 characters |
+| `401 Unauthorized` | `UNAUTHORIZED` | Token is missing |
+| `401 Unauthorized` | `INVALID_ACCESS_TOKEN` | Token is invalid or expired |
+| `401 Unauthorized` | `TOKEN_REVOKED` | Token has been blacklisted on logout |
+
 ## Unknown routes
 
 Requests that do not match a registered route return `404 Not Found`:

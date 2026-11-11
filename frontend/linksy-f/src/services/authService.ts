@@ -223,6 +223,34 @@ export async function getOtherUsers(page: number): Promise<UserDirectoryPage> {
   return { users: profiles, pagination };
 }
 
+export async function searchUsers(username: string): Promise<DirectoryUser[]> {
+  const response = await fetch(
+    `${apiUrl}/api/user/search?username=${encodeURIComponent(username)}`,
+    { credentials: "include" },
+  );
+  const result = (await response.json()) as ApiResponse<{
+    users: DirectoryUser[];
+  }>;
+
+  if (!response.ok || !result.success || !result.data) {
+    throw new Error(result.message || "We couldn't search for users.");
+  }
+
+  if (
+    !Array.isArray(result.data.users) ||
+    result.data.users.some(
+      (user) =>
+        typeof user.id !== "string" ||
+        typeof user.username !== "string" ||
+        (user.avatarUrl !== null && typeof user.avatarUrl !== "string"),
+    )
+  ) {
+    throw new Error("The user search response is invalid.");
+  }
+
+  return result.data.users;
+}
+
 export async function updateUserProfile(
   userId: string,
   payload: UpdateUserProfilePayload,

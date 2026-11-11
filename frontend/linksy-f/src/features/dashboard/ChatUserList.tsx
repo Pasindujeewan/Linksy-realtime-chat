@@ -1,17 +1,59 @@
-import { UserRound, UsersRound } from "lucide-react";
+import { Search, UserRound, UsersRound } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
-import { getOtherUsers } from "../../services/authService";
+import {
+  getOtherUsers,
+  searchUsers as searchUsersByUsername,
+} from "../../services/authService";
 import type { DirectoryUser, UserDirectoryPage } from "../../types/auth";
 
 export default function ChatUserList() {
   const [users, setUsers] = useState<DirectoryUser[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchedUsers, setSearchedUsers] = useState<DirectoryUser[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [nextPage, setNextPage] = useState<number | null>(null);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const isLoadingMoreRef = useRef(false);
+
+  useEffect(() => {
+    const username = searchQuery.trim();
+    if (!username) {
+      setSearchedUsers([]);
+      setSearchError(null);
+      setIsSearching(false);
+      return;
+    }
+
+    let isCurrentRequest = true;
+    setSearchedUsers([]);
+    setIsSearching(true);
+    setSearchError(null);
+
+    searchUsersByUsername(username)
+      .then((result) => {
+        if (isCurrentRequest) setSearchedUsers(result);
+      })
+      .catch((requestError: unknown) => {
+        if (!isCurrentRequest) return;
+        setSearchError(
+          requestError instanceof Error
+            ? requestError.message
+            : "We couldn't search for users.",
+        );
+      })
+      .finally(() => {
+        if (isCurrentRequest) setIsSearching(false);
+      });
+
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [searchQuery]);
 
   useEffect(() => {
     let isCurrentRequest = true;
@@ -77,6 +119,11 @@ export default function ChatUserList() {
     setRetryCount((currentCount) => currentCount + 1);
   }
 
+  const isSearchActive = searchQuery.trim().length > 0;
+  const displayedUsers = isSearchActive ? searchedUsers : users;
+  const displayedError = isSearchActive ? searchError : error;
+  const isLoadingUsers = isSearchActive ? isSearching : !hasLoaded;
+
   return (
     <section
       aria-labelledby="people-heading"
@@ -98,18 +145,32 @@ export default function ChatUserList() {
           <UsersRound aria-hidden="true" className="h-5 w-5" />
         </span>
       </div>
-      {!hasLoaded && (
+      <label className="relative mt-6 block">
+        <Search
+          aria-hidden="true"
+          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+        />
+        <input
+          type="search"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          maxLength={20}
+          placeholder="Search by username"
+          aria-label="Search users by username"
+          className="w-full rounded-lg border border-slate-300 py-2.5 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+        />
+      </label>
+
+      {isLoadingUsers && (
         <p role="status" className="mt-8 text-center text-sm text-slate-500">
-          Loading people…
+          {isSearchActive ? "Searching users…" : "Loading people…"}
         </p>
       )}
 
-      {error && (
+      {displayedError && (
         <div className="mt-6 text-center">
-          <p role="alert" className="text-sm text-rose-600">
-            {error}
-          </p>
-          {users.length === 0 && (
+          <p role="alert" className="text-sm text-rose-600">{displayedError}</p>
+          {!isSearchActive && users.length === 0 && (
             <button
               type="button"
               onClick={handleRetry}
@@ -121,25 +182,27 @@ export default function ChatUserList() {
         </div>
       )}
 
-      {hasLoaded && users.length === 0 && !error && (
+      {!isLoadingUsers && displayedUsers.length === 0 && !displayedError && (
         <div className="mt-8 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-5 py-10 text-center">
           <UsersRound
             aria-hidden="true"
             className="mx-auto h-8 w-8 text-slate-400"
           />
           <h3 className="mt-3 text-sm font-semibold text-slate-800">
-            No other profiles yet
+            {isSearchActive ? "No users found" : "No other profiles yet"}
           </h3>
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-            Other Linksy members will appear here when they join.
+            {isSearchActive
+              ? "Try a different username."
+              : "Other Linksy members will appear here when they join."}
           </p>
         </div>
       )}
 
-      {users.length > 0 && (
+      {displayedUsers.length > 0 && (
         <>
           <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {users.map((user) => (
+            {displayedUsers.map((user) => (
               <li
                 key={user.id}
                 className="rounded-xl border border-slate-200 transition hover:border-indigo-200 hover:bg-indigo-50/50"
@@ -171,7 +234,7 @@ export default function ChatUserList() {
             ))}
           </ul>
 
-          {nextPage !== null && (
+          {!isSearchActive && nextPage !== null && (
             <div className="mt-6 flex justify-center">
               <button
                 type="button"
