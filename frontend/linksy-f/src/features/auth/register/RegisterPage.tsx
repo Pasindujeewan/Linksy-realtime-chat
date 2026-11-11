@@ -26,10 +26,13 @@ export default function RegisterPage() {
             href="/"
             className="mb-10 flex items-center gap-2.5 text-lg font-bold tracking-tight text-indigo-700 lg:hidden"
           >
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-indigo-600 text-white">
-              ↗
-            </span>{" "}
-            linksy
+            <img
+              src="/linksy-logo.svg"
+              alt=""
+              aria-hidden="true"
+              className="h-10 w-10 rounded-xl"
+            />
+            <span>Linksy</span>
           </a>
           <div className="mb-8">
             <p className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-indigo-600">

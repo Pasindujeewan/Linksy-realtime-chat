@@ -10,10 +10,13 @@ export default function RegisterHero() {
         href="/"
         className="relative flex items-center gap-3 text-xl font-bold tracking-tight"
       >
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/15 text-xl">
-          ↗
-        </span>{" "}
-        linksy
+        <img
+          src="/linksy-logo.svg"
+          alt=""
+          aria-hidden="true"
+          className="h-12 w-12 rounded-xl"
+        />
+        <span>Linksy</span>
       </a>
       <div className="relative max-w-xl py-10">
         <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-2 text-xs font-medium text-indigo-50">

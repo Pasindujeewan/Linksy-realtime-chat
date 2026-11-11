@@ -1,4 +1,4 @@
-import { LogOut, MessageCircle, UserRound } from "lucide-react";
+import { LogOut, UserRound } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import ChatUserList from "./ChatUserList";
@@ -41,10 +41,13 @@ export default function DashboardPage() {
             to="/dashboard"
             className="flex items-center gap-2.5 text-lg font-bold tracking-tight text-indigo-700"
           >
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-indigo-600 text-white">
-              <MessageCircle aria-hidden="true" className="h-5 w-5" />
-            </span>
-            linksy
+            <img
+              src="/linksy-logo.svg"
+              alt=""
+              aria-hidden="true"
+              className="h-10 w-10 rounded-xl"
+            />
+            <span>Linksy</span>
           </Link>
           <div className="flex items-center gap-3">
             <div className="hidden text-right sm:block">
