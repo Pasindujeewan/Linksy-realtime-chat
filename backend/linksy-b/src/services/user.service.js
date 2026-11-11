@@ -110,3 +110,29 @@ export const getOtherUsers = async (userId, page) => {
     },
   };
 };
+
+export const searchUsersByUsername = async (username, userId) => {
+  // Escape regex characters so the username is treated as plain text.
+  const escapedUsername = username.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const users = await User.find({
+    _id: { $ne: userId },
+    isActive: true,
+    username: { $regex: escapedUsername, $options: "i" },
+  })
+    .select("username avatarUrl")
+    .sort({ username: 1, _id: 1 })
+    .limit(USERS_PER_PAGE)
+    .lean();
+
+  const profiles = await Promise.all(
+    users.map(async (user) => ({
+      id: user._id.toString(),
+      username: user.username,
+      avatarUrl: user.avatarUrl
+        ? await generateImageUrl(user.avatarUrl)
+        : null,
+    })),
+  );
+
+  return profiles;
+};
