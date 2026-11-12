@@ -1,3 +1,4 @@
+import { createServer } from "node:http";
 import app from "./app.js";
 import connectDB from "./config/db.js";
 import { checkS3Connection } from "./config/s3.js";
@@ -14,6 +15,7 @@ const httpServer = createServer(app);
 
 // Initialize Socket.IO
 const io = initializeSocket(httpServer);
+app.set("io", io);
 
 const PORT = process.env.PORT || 3000;
 

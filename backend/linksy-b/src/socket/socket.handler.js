@@ -8,6 +8,7 @@ export const initializeSocketHandlers = (io) => {
 
     // Personal room for each user.
     socket.join(`user:${socket.userId}`);
+    socket.join(`access-token:${socket.data.accessTokenBlacklistKey}`);
 
     registerMessageEvents(io, socket);
     registerReadEvents(io, socket);
