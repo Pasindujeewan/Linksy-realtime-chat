@@ -1,6 +1,16 @@
+import mongoose from "mongoose";
 import { AppError } from "../errors/AppError.js";
 import { successResponse } from "../utils/response.js";
-import { getUserById } from "../services/user.service.js";
+import {
+  getOtherUsers,
+  getPublicUserProfile,
+  getUserById,
+  searchUsersByUsername,
+  updateUserById,
+} from "../services/user.service.js";
+import { updateUserProfileSchema } from "../validators/auth.validator.js";
+
+const USERS_PER_PAGE = 10;
 
 // Controller for handling user profile retrieval
 export const getUserProfile = async (req, res, next) => {
@@ -11,6 +21,87 @@ export const getUserProfile = async (req, res, next) => {
     }
     const user = await getUserById(req.params.userId);
     successResponse(res, user, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getOtherUserProfile = async (req, res, next) => {
+  try {
+    const userId = req.params.userId;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new AppError("Invalid user ID", 400, "INVALID_USER_ID");
+    }
+
+    const user = await getPublicUserProfile(userId);
+    return successResponse(res, user, "User profile retrieved successfully");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateUserProfile = async (req, res, next) => {
+  try {
+    const userId = req.params.userId;
+    if (req.user.sub !== userId) {
+      throw new AppError(
+        "You can only update your own profile",
+        403,
+        "FORBIDDEN",
+      );
+    }
+    console.log("Request body:", req.body); // Log the request body for debugging
+    const validateResult = updateUserProfileSchema.safeParse(req.body);
+    if (!validateResult.success) {
+      const message = validateResult.error.issues
+        .map((issue) => issue.message)
+        .join(", ");
+      throw new AppError(message, 400, "INVALID_PROFILE_DATA");
+    }
+
+    const user = await updateUserById(userId, validateResult.data);
+    return successResponse(res, user, "User profile updated successfully");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getOtherUserProfiles = async (req, res, next) => {
+  try {
+    const pageValue = req.query.page ?? "1";
+    if (
+      typeof pageValue !== "string" ||
+      !/^[1-9]\d*$/.test(pageValue) ||
+      !Number.isSafeInteger(Number(pageValue)) ||
+      Number(pageValue) > Math.floor(Number.MAX_SAFE_INTEGER / USERS_PER_PAGE)
+    ) {
+      throw new AppError("Page must be a positive integer", 400, "INVALID_PAGE");
+    }
+
+    const result = await getOtherUsers(req.user.sub, Number(pageValue));
+    return successResponse(res, result, "User profiles retrieved successfully");
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const searchUsers = async (req, res, next) => {
+  try {
+    const username =
+      typeof req.query.username === "string" ? req.query.username.trim() : "";
+    if (
+      username.length === 0 ||
+      username.length > 20
+    ) {
+      throw new AppError(
+        "Username search must be between 1 and 20 characters",
+        400,
+        "INVALID_USERNAME_SEARCH",
+      );
+    }
+
+    const users = await searchUsersByUsername(username, req.user.sub);
+    return successResponse(res, { users }, "Users found successfully");
   } catch (error) {
     next(error);
   }

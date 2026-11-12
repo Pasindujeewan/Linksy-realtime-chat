@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Linksy logo</title>
+  <desc id="desc">Two connected user profiles in a blue-to-purple gradient above the Linksy wordmark, on a dark navy rounded square.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#071943"/>
+      <stop offset="1" stop-color="#020824"/>
+    </linearGradient>
+    <linearGradient id="link" x1="0" y1="0" x2="1" y2="0.8">
+      <stop offset="0" stop-color="#43D7F4"/>
+      <stop offset="0.48" stop-color="#2877F4"/>
+      <stop offset="1" stop-color="#B64AF2"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="20" y="20" width="984" height="984" rx="190" fill="url(#bg)"/>
+
+  <!-- Connected profile ribbon -->
+  <path d="M267 608
+           C248 578 239 545 243 508
+           C250 436 309 382 382 382
+           C431 382 466 405 502 441
+           L570 509
+           C608 547 640 565 684 565
+           C749 565 799 518 799 454
+           C799 390 750 344 686 344
+           C650 344 623 358 596 386
+           L542 441"
+        fill="none" stroke="url(#link)" stroke-width="54"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Left user -->
+  <circle cx="389" cy="489" r="54" fill="#39BDF5"/>
+  <path d="M292 625
+           C300 568 336 544 389 544
+           C442 544 478 568 486 625
+           C488 642 476 653 458 653
+           H320 C302 653 290 642 292 625Z"
+        fill="#318BF3"/>
+
+  <!-- Right user -->
+  <circle cx="687" cy="421" r="53" fill="#A65AF0"/>
+  <path d="M591 552
+           C599 496 634 475 687 475
+           C740 475 775 496 783 552
+           C785 568 773 579 755 579
+           H619 C601 579 589 568 591 552Z"
+        fill="#9752ED"/>
+
+  <!-- Small connection accents -->
+  <path d="M303 300 L326 333 M365 273 L377 315"
+        stroke="#46BFF4" stroke-width="28" stroke-linecap="round"/>
+
+  <!-- Wordmark -->
+  <text x="512" y="824" text-anchor="middle"
+        font-family="Inter, Arial, Helvetica, sans-serif"
+        font-size="150" font-weight="700" letter-spacing="-7"
+        fill="#FFFFFF">Linksy</text>
+  <circle cx="440" cy="701" r="18" fill="#2DA8F7"/>
+</svg>

@@ -22,6 +22,34 @@ export interface UserProfile extends RegisteredUser {
   bio?: string;
 }
 
+export interface PublicUserProfile extends RegisteredUser {
+  email: string;
+  avatarUrl: string | null;
+  bio: string;
+}
+
+export interface UpdateUserProfilePayload {
+  username?: string;
+  email?: string;
+  bio?: string;
+}
+
+export interface DirectoryUser {
+  id: string;
+  username: string;
+  avatarUrl: string | null;
+}
+
+export interface UserDirectoryPage {
+  users: DirectoryUser[];
+  pagination: {
+    page: number;
+    limit: number;
+    hasMore: boolean;
+    nextPage: number | null;
+  };
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   message: string;

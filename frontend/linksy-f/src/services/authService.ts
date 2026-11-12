@@ -1,8 +1,12 @@
 import type {
   ApiResponse,
+  UserDirectoryPage,
+  DirectoryUser,
   LoginPayload,
+  PublicUserProfile,
   RegisterPayload,
   RegisteredUser,
+  UpdateUserProfilePayload,
   UserProfile,
 } from "../types/auth";
 
@@ -25,6 +29,23 @@ interface BackendUserProfile {
   email?: string;
   avatarUrl?: string | null;
   bio?: string;
+}
+
+interface BackendPublicUserProfile {
+  id?: string;
+  username?: string;
+  email?: string;
+  avatarUrl?: string | null;
+  bio?: string;
+}
+
+interface BackendUserDirectoryPage {
+  users: Array<{
+    id: string;
+    username: string;
+    avatarUrl: string | null;
+  }>;
+  pagination: UserDirectoryPage["pagination"];
 }
 
 /** Uploads a profile image and returns the token required by registration. */
@@ -124,6 +145,134 @@ export async function getUserProfile(userId: string): Promise<UserProfile> {
   const id = result.data.id ?? result.data._id;
   if (!id || !result.data.username) {
     throw new Error("The profile response is missing required user details.");
+  }
+
+  return {
+    id,
+    username: result.data.username,
+    email: result.data.email,
+    avatarUrl: result.data.avatarUrl,
+    bio: result.data.bio,
+  };
+}
+
+export async function getOtherUserProfile(
+  userId: string,
+): Promise<PublicUserProfile> {
+  const response = await fetch(
+    `${apiUrl}/api/user/${encodeURIComponent(userId)}`,
+    { credentials: "include" },
+  );
+  const result =
+    (await response.json()) as ApiResponse<BackendPublicUserProfile>;
+
+  if (!response.ok || !result.success || !result.data) {
+    throw new Error(result.message || "We couldn't load this profile.");
+  }
+
+  const { id, username, email, avatarUrl, bio } = result.data;
+  if (
+    typeof id !== "string" ||
+    typeof username !== "string" ||
+    typeof email !== "string" ||
+    (avatarUrl !== null && typeof avatarUrl !== "string") ||
+    typeof bio !== "string"
+  ) {
+    throw new Error("The profile response is missing required user details.");
+  }
+
+  return { id, username, email, avatarUrl, bio };
+}
+
+export async function getOtherUsers(page: number): Promise<UserDirectoryPage> {
+  const response = await fetch(
+    `${apiUrl}/api/user/others?page=${encodeURIComponent(page)}`,
+    { credentials: "include" },
+  );
+  const result =
+    (await response.json()) as ApiResponse<BackendUserDirectoryPage>;
+
+  if (!response.ok || !result.success || !result.data) {
+    throw new Error(result.message || "We couldn't load the people directory.");
+  }
+
+  const { users, pagination } = result.data;
+  if (
+    !Array.isArray(users) ||
+    !pagination ||
+    !Number.isInteger(pagination.page) ||
+    !Number.isInteger(pagination.limit) ||
+    typeof pagination.hasMore !== "boolean" ||
+    (pagination.nextPage !== null && !Number.isInteger(pagination.nextPage))
+  ) {
+    throw new Error("The people directory response is invalid.");
+  }
+
+  const profiles: DirectoryUser[] = users.map((profile) => {
+    if (
+      typeof profile.id !== "string" ||
+      typeof profile.username !== "string" ||
+      (profile.avatarUrl !== null && typeof profile.avatarUrl !== "string")
+    ) {
+      throw new Error("The people directory response is invalid.");
+    }
+
+    return profile;
+  });
+
+  return { users: profiles, pagination };
+}
+
+export async function searchUsers(username: string): Promise<DirectoryUser[]> {
+  const response = await fetch(
+    `${apiUrl}/api/user/search?username=${encodeURIComponent(username)}`,
+    { credentials: "include" },
+  );
+  const result = (await response.json()) as ApiResponse<{
+    users: DirectoryUser[];
+  }>;
+
+  if (!response.ok || !result.success || !result.data) {
+    throw new Error(result.message || "We couldn't search for users.");
+  }
+
+  if (
+    !Array.isArray(result.data.users) ||
+    result.data.users.some(
+      (user) =>
+        typeof user.id !== "string" ||
+        typeof user.username !== "string" ||
+        (user.avatarUrl !== null && typeof user.avatarUrl !== "string"),
+    )
+  ) {
+    throw new Error("The user search response is invalid.");
+  }
+
+  return result.data.users;
+}
+
+export async function updateUserProfile(
+  userId: string,
+  payload: UpdateUserProfilePayload,
+): Promise<UserProfile> {
+  const response = await fetch(
+    `${apiUrl}/api/user/me/${encodeURIComponent(userId)}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    },
+  );
+  const result = (await response.json()) as ApiResponse<BackendUserProfile>;
+
+  if (!response.ok || !result.success || !result.data) {
+    throw new Error(result.message || "We couldn't update your profile.");
+  }
+
+  const id = result.data.id ?? result.data._id;
+  if (!id || !result.data.username) {
+    throw new Error("The updated profile response is missing required user details.");
   }
 
   return {

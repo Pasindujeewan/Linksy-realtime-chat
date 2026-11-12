@@ -49,3 +49,29 @@ export const registerSchema = z
     imageToken: z.string().optional(),
   })
   .strict();
+
+export const updateUserProfileSchema = z
+  .object({
+    username: z
+      .string()
+      .trim()
+      .min(3, "Username must contain at least 3 characters")
+      .max(20, "Username cannot exceed 20 characters")
+      .regex(
+        /^[a-zA-Z0-9_]+$/,
+        "Username can contain only letters, numbers, and underscores",
+      )
+      .optional(),
+    email: z
+      .string()
+      .trim()
+      .max(254)
+      .pipe(z.email({ error: "Invalid email address" }))
+      .transform((value) => value.toLowerCase())
+      .optional(),
+    bio: z.string().trim().max(160, "Bio cannot exceed 160 characters").optional(),
+  })
+  .strict()
+  .refine((profile) => Object.keys(profile).length > 0, {
+    message: "At least one profile field is required",
+  });

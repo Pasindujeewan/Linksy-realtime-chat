@@ -9,8 +9,13 @@ import {
 import {
   getUserProfile,
   logoutUser as requestLogoutUser,
+  updateUserProfile as requestUpdateUserProfile,
 } from "../services/authService";
-import type { RegisteredUser, UserProfile } from "../types/auth";
+import type {
+  RegisteredUser,
+  UpdateUserProfilePayload,
+  UserProfile,
+} from "../types/auth";
 import { useToast } from "./ToastContext";
 
 const SESSION_USER_KEY = "linksy.sessionUser";
@@ -20,6 +25,7 @@ interface UserContextValue {
   isLoadingProfile: boolean;
   setAuthenticatedUser: (user: RegisteredUser) => void;
   clearAuthenticatedUser: () => void;
+  updateUserProfile: (payload: UpdateUserProfilePayload) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -106,6 +112,18 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const updateUserProfile = useCallback(
+    async (payload: UpdateUserProfilePayload) => {
+      if (!user?.id) {
+        throw new Error("You must be signed in to update your profile.");
+      }
+
+      const updatedUser = await requestUpdateUserProfile(user.id, payload);
+      setUser(updatedUser);
+    },
+    [user?.id],
+  );
+
   const logout = useCallback(async () => {
     await requestLogoutUser();
     // Keep local auth state until the server confirms the token was revoked.
@@ -119,6 +137,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         isLoadingProfile,
         setAuthenticatedUser,
         clearAuthenticatedUser,
+        updateUserProfile,
         logout,
       }}
     >

@@ -2,10 +2,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../src/services/user.service.js", () => ({
   getUserById: vi.fn(),
+  searchUsersByUsername: vi.fn(),
 }));
 
-import { getUserById } from "../src/services/user.service.js";
-import { getUserProfile } from "../src/controllers/user.controller.js";
+import {
+  getUserById,
+  searchUsersByUsername,
+} from "../src/services/user.service.js";
+import {
+  getUserProfile,
+  searchUsers,
+} from "../src/controllers/user.controller.js";
 
 const makeResponse = () => {
   const res = { status: vi.fn(), json: vi.fn() };
@@ -58,5 +65,51 @@ describe("getUserProfile", () => {
     );
 
     expect(next).toHaveBeenCalledWith(error);
+  });
+});
+
+describe("searchUsers", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("passes an invalid username search error to next", async () => {
+    const next = vi.fn();
+
+    await searchUsers(
+      { query: { username: " " }, user: { sub: "user-1" } },
+      makeResponse(),
+      next,
+    );
+
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        statusCode: 400,
+        code: "INVALID_USERNAME_SEARCH",
+      }),
+    );
+    expect(searchUsersByUsername).not.toHaveBeenCalled();
+  });
+
+  it("returns matching users for the trimmed username query", async () => {
+    const users = [{ id: "user-2", username: "alex" }];
+    searchUsersByUsername.mockResolvedValue(users);
+    const res = makeResponse();
+    const next = vi.fn();
+
+    await searchUsers(
+      { query: { username: " alex " }, user: { sub: "user-1" } },
+      res,
+      next,
+    );
+
+    expect(searchUsersByUsername).toHaveBeenCalledWith("alex", "user-1");
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: true,
+        data: { users },
+      }),
+    );
+    expect(next).not.toHaveBeenCalled();
   });
 });
