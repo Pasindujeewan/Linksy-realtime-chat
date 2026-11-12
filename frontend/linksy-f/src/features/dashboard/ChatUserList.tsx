@@ -201,7 +201,7 @@ export default function ChatUserList() {
 
       {displayedUsers.length > 0 && (
         <>
-          <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-8 grid grid-cols-1 gap-3">
             {displayedUsers.map((user) => (
               <li
                 key={user.id}

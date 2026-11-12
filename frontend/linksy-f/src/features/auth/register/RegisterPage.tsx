@@ -1,7 +1,7 @@
 import RegisterForm from "./RegisterForm";
-import RegisterHero from "./RegisterHero";
 import { useRegisterForm } from "./useRegisterForm";
 import GoogleSignInOption from "../shared/GoogleSignInOption";
+import AuthHero from "../shared/AuthHero";
 import { useGoogleSignIn } from "../shared/useGoogleSignIn";
 
 export default function RegisterPage() {
@@ -19,7 +19,7 @@ export default function RegisterPage() {
 
   return (
     <main className="min-h-screen bg-[#f7f8fc] lg:grid lg:grid-cols-[minmax(360px,0.92fr)_1.08fr]">
-      <RegisterHero />
+      <AuthHero />
       <section className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-10 lg:px-12 xl:px-20">
         <div className="w-full max-w-lg">
           <a

@@ -1,7 +1,7 @@
 const communityColors = ["#f4b6a6", "#b6d3ff", "#f2d185", "#c4b5fd"];
 const communityInitials = ["J", "M", "A", "S"];
 
-export default function RegisterHero() {
+export default function AuthHero() {
   return (
     <aside className="relative hidden overflow-hidden bg-indigo-700 px-12 py-12 text-white lg:flex lg:flex-col lg:justify-between xl:px-20">
       <div className="absolute -right-28 top-1/4 h-96 w-96 rounded-full bg-indigo-500/40 blur-3xl" />
