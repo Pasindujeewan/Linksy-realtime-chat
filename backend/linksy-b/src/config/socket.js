@@ -1,4 +1,6 @@
 import { Server } from "socket.io";
+import { authenticateSocketToken } from "../socket/socket.auth.js";
+import { initializeSocketHandlers } from "../socket/socket.handler.js";
 
 export const initializeSocket = (httpServer) => {
   const io = new Server(httpServer, {
@@ -8,14 +10,8 @@ export const initializeSocket = (httpServer) => {
       credentials: true,
     },
   });
-
-  io.on("connection", (socket) => {
-    console.log("Socket connected:", socket.id);
-
-    socket.on("disconnect", () => {
-      console.log("Socket disconnected:", socket.id);
-    });
-  });
+  io.use(authenticateSocketToken);
+  initializeSocketHandlers(io);
 
   return io;
 };

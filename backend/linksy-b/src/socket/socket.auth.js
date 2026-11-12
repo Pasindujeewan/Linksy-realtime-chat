@@ -1,14 +1,14 @@
 import jwt, { JsonWebTokenError } from "jsonwebtoken";
 import AppError from "../errors/AppError.js";
 import { env } from "../config/env.js";
+import { parse } from "cookie";
 
 export const authenticateSocketToken = (socket, next) => {
   try {
     // Extract the token from the socket handshake
-    const token =
-      socket.handshake.auth?.token ||
-      socket.handshake.headers.authorization?.replace("Bearer ", "") ||
-      socket.handshake.headers.cookie;
+    const cookies = parse(socket.handshake.headers.cookie || "");
+
+    const token = cookies.accessToken;
 
     if (!token) {
       return next(
