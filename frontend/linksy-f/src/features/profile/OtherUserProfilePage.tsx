@@ -1,10 +1,13 @@
 import { ArrowLeft, Mail, MessageCircle, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
+import ConversationChat from "../chat/components/ConversationChat";
+import { useUser } from "../../contexts/UserContext";
 import { getOtherUserProfile } from "../../services/authService";
 import type { PublicUserProfile } from "../../types/auth";
 
 export default function OtherUserProfilePage() {
+  const { user } = useUser();
   const { userId } = useParams();
   const [profile, setProfile] = useState<PublicUserProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -139,19 +142,11 @@ export default function OtherUserProfilePage() {
                   Conversation
                 </h2>
               </div>
-              <div className="grid flex-1 place-items-center p-6 text-center">
-                <div>
-                  <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-indigo-50 text-indigo-600">
-                    <MessageCircle aria-hidden="true" className="h-6 w-6" />
-                  </span>
-                  <p className="mt-4 text-sm font-medium text-slate-700">
-                    Your chat with {profile.username} will appear here.
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Messaging isn’t available yet.
-                  </p>
-                </div>
-              </div>
+              <ConversationChat
+                recipientId={profile.id}
+                currentUserId={user?.id ?? ""}
+                recipientName={profile.username}
+              />
             </section>
           </section>
         )}

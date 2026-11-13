@@ -1,26 +1,43 @@
 import Conversation from "../../models/conversation.model.js";
-import Message from "../../models/message.model.js";
+import Message from "../../models/meassage.model.js";
+import { createOrGetConversation } from "../../services/conversation.service.js";
 
 export const registerMessageEvents = (io, socket) => {
   // Join a conversation room.
-  socket.on("conversation:join", async (conversationId, callback) => {
+  socket.on("conversation:join", async (data, callback) => {
     try {
-      const conversation = await Conversation.findOne({
-        _id: conversationId,
-        participants: socket.userId,
-      });
+      const { recipientId } = data;
 
-      if (!conversation) {
+      if (!recipientId) {
         return callback?.({
           success: false,
-          message: "Conversation not found or access denied",
+          message: "Recipient ID is required",
         });
       }
 
-      socket.join(`conversation:${conversationId}`);
+      // Prevent creating a conversation with yourself.
+      if (recipientId.toString() === socket.userId.toString()) {
+        return callback?.({
+          success: false,
+          message: "Cannot create a conversation with yourself",
+        });
+      }
 
-      callback?.({ success: true });
+      // Find existing conversation or create a new one.
+      const conversation = await createOrGetConversation(
+        socket.userId,
+        recipientId,
+      );
+
+      // Join the conversation room.
+      socket.join(`conversation:${conversation._id}`);
+
+      callback?.({
+        success: true,
+        conversation,
+      });
     } catch (error) {
+      console.error("Join conversation error:", error);
       callback?.({
         success: false,
         message: "Failed to join conversation",
@@ -71,7 +88,7 @@ export const registerMessageEvents = (io, socket) => {
 
       const populatedMessage = await Message.findById(message._id).populate(
         "senderId",
-        "username avatarUrl",
+        "username ",
       );
 
       // Send to everyone in the conversation room.

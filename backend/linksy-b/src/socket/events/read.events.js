@@ -1,5 +1,5 @@
 import Conversation from "../../models/conversation.model.js";
-import Message from "../../models/message.model.js";
+import Message from "../../models/meassage.model.js";
 
 export const registerReadEvents = (io, socket) => {
   socket.on("message:read", async (data, callback) => {

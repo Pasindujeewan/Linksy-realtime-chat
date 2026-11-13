@@ -1,12 +1,12 @@
 import jwt from "jsonwebtoken";
 import { AppError } from "../errors/AppError.js";
 import { env } from "../config/env.js";
-import { parse } from "cookie";
+import { parseCookie } from "cookie";
 import { getValue } from "../utils/redisUtils.js";
 import { getAccessTokenBlacklistKey } from "../utils/token.js";
 
 export const authenticateSocketToken = async (socket, next) => {
-  const cookies = parse(socket.handshake.headers.cookie || "");
+  const cookies = parseCookie(socket.handshake.headers.cookie || "");
   const token = cookies.accessToken;
 
   if (!token) {
