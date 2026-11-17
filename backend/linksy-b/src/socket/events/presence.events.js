@@ -1,4 +1,4 @@
-// In-memory user connection tracking.
+// In-memory user connection tracking.Later this can be replaced with a more persistent solution like Redis for scalability and reliability.
 const onlineUsers = new Map();
 
 export const registerPresenceEvents = (io, socket) => {

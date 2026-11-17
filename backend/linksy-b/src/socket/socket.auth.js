@@ -20,7 +20,11 @@ export const authenticateSocketToken = async (socket, next) => {
     return next(new AppError("Invalid access token", 401, "UNAUTHORIZED"));
   }
 
-  if (typeof payload === "string" || !payload.sub) {
+  if (
+    typeof payload === "string" ||
+    !payload.sub ||
+    !Number.isFinite(payload.exp)
+  ) {
     return next(new AppError("Invalid access token", 401, "UNAUTHORIZED"));
   }
 
@@ -35,7 +39,15 @@ export const authenticateSocketToken = async (socket, next) => {
     return next(error);
   }
 
+  const accessTokenExpiresAt = payload.exp * 1000;
+  if (accessTokenExpiresAt <= Date.now()) {
+    return next(
+      new AppError("Invalid or expired access token", 401, "UNAUTHORIZED"),
+    );
+  }
+
   socket.userId = payload.sub;
   socket.data.accessTokenBlacklistKey = accessTokenBlacklistKey;
+  socket.data.accessTokenExpiresAt = accessTokenExpiresAt;
   return next();
 };
