@@ -31,6 +31,10 @@ export const registerMessageEvents = (io, socket) => {
 
       // Join the conversation room.
       socket.join(`conversation:${conversation._id}`);
+      console.info("[chat] joined conversation", {
+        socketId: socket.id,
+        conversationId: conversation._id.toString(),
+      });
 
       callback?.({
         success: true,
@@ -129,6 +133,11 @@ export const registerMessageEvents = (io, socket) => {
         "message:new",
         populatedMessage,
       );
+      console.info("[chat] broadcast new message", {
+        socketId: socket.id,
+        conversationId: conversationId.toString(),
+        messageId: message._id.toString(),
+      });
 
       callback?.({
         success: true,

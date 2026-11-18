@@ -22,7 +22,13 @@ export const getPublicUsersCacheVersion = async () => {
 
 export const getPublicUsersCache = async (cacheKey) => {
   const cached = await getValue(cacheKey);
-  return cached === null ? null : JSON.parse(cached);
+  if (cached === null) {
+    console.info("[public-users-cache] MISS");
+    return null;
+  }
+
+  console.info("[public-users-cache] HIT");
+  return JSON.parse(cached);
 };
 
 export const setPublicUsersCache = async (cacheKey, data) => {
@@ -31,8 +37,12 @@ export const setPublicUsersCache = async (cacheKey, data) => {
     JSON.stringify(data),
     PUBLIC_USERS_CACHE_TTL_SECONDS,
   );
+  console.info("[public-users-cache] SET", {
+    ttlSeconds: PUBLIC_USERS_CACHE_TTL_SECONDS,
+  });
 };
 
 export const invalidatePublicUsersCache = async () => {
-  await incrementValue(getPublicUsersCacheVersionKey());
+  const version = await incrementValue(getPublicUsersCacheVersionKey());
+  console.info("[public-users-cache] INVALIDATED", { version });
 };
