@@ -1,13 +1,27 @@
 import { Search, UserRound, UsersRound } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
+import { useChatSocket } from "../../contexts/ChatSocketContext";
+import { useUser } from "../../contexts/UserContext";
 import {
   getOtherUsers,
   searchUsers as searchUsersByUsername,
 } from "../../services/authService";
 import type { DirectoryUser, UserDirectoryPage } from "../../types/auth";
 
+function excludeCurrentUser(
+  users: DirectoryUser[],
+  currentUserId: string | undefined,
+): DirectoryUser[] {
+  return currentUserId
+    ? users.filter((user) => user.id !== currentUserId)
+    : users;
+}
+
 export default function ChatUserList() {
+  const { onlineUserIds } = useChatSocket();
+  const { user: currentUser } = useUser();
+  const currentUserId = currentUser?.id;
   const [users, setUsers] = useState<DirectoryUser[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchedUsers, setSearchedUsers] = useState<DirectoryUser[]>([]);
@@ -36,7 +50,9 @@ export default function ChatUserList() {
 
     searchUsersByUsername(username)
       .then((result) => {
-        if (isCurrentRequest) setSearchedUsers(result);
+        if (isCurrentRequest) {
+          setSearchedUsers(excludeCurrentUser(result, currentUserId));
+        }
       })
       .catch((requestError: unknown) => {
         if (!isCurrentRequest) return;
@@ -53,7 +69,7 @@ export default function ChatUserList() {
     return () => {
       isCurrentRequest = false;
     };
-  }, [searchQuery]);
+  }, [currentUserId, searchQuery]);
 
   useEffect(() => {
     let isCurrentRequest = true;
@@ -63,7 +79,7 @@ export default function ChatUserList() {
     getOtherUsers(1)
       .then((result: UserDirectoryPage) => {
         if (!isCurrentRequest) return;
-        setUsers(result.users);
+        setUsers(excludeCurrentUser(result.users, currentUserId));
         setNextPage(result.pagination.nextPage);
       })
       .catch((requestError: unknown) => {
@@ -81,7 +97,7 @@ export default function ChatUserList() {
     return () => {
       isCurrentRequest = false;
     };
-  }, [retryCount]);
+  }, [currentUserId, retryCount]);
 
   async function handleLoadMore() {
     if (nextPage === null || isLoadingMoreRef.current) return;
@@ -92,10 +108,16 @@ export default function ChatUserList() {
     try {
       const result = await getOtherUsers(nextPage);
       setUsers((currentUsers) => {
-        const existingIds = new Set(currentUsers.map((user) => user.id));
+        const remainingUsers = excludeCurrentUser(
+          currentUsers,
+          currentUserId,
+        );
+        const existingIds = new Set(remainingUsers.map((user) => user.id));
         return [
-          ...currentUsers,
-          ...result.users.filter((user) => !existingIds.has(user.id)),
+          ...remainingUsers,
+          ...excludeCurrentUser(result.users, currentUserId).filter(
+            (user) => !existingIds.has(user.id),
+          ),
         ];
       });
       setNextPage(result.pagination.nextPage);
@@ -120,7 +142,10 @@ export default function ChatUserList() {
   }
 
   const isSearchActive = searchQuery.trim().length > 0;
-  const displayedUsers = isSearchActive ? searchedUsers : users;
+  const displayedUsers = excludeCurrentUser(
+    isSearchActive ? searchedUsers : users,
+    currentUserId,
+  );
   const displayedError = isSearchActive ? searchError : error;
   const isLoadingUsers = isSearchActive ? isSearching : !hasLoaded;
 
@@ -229,6 +254,15 @@ export default function ChatUserList() {
                   <span className="truncate text-sm font-semibold text-slate-800">
                     {user.username}
                   </span>
+                  {onlineUserIds.has(user.id) && (
+                    <span className="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-emerald-700">
+                      <span
+                        aria-hidden="true"
+                        className="h-2 w-2 rounded-full bg-emerald-500"
+                      />
+                      Online
+                    </span>
+                  )}
                 </Link>
               </li>
             ))}

@@ -7,6 +7,7 @@ import { errorHandler } from "./middleware/errorHandler.middleware.js";
 import { notFoundHandler } from "./middleware/notFound.middleware.js";
 import uploadRouter from "./routes/upload.route.js";
 import userRouter from "./routes/user.route.js";
+import conversationRouter from "./routes/conversation.route.js";
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use(express.json());
 app.use("/api/auth", authRouter);
 app.use("/api/upload", uploadRouter);
 app.use("/api/user", userRouter);
+app.use("/api/conversations", conversationRouter);
 
 // Error handling middleware
 app.use(notFoundHandler);

@@ -31,6 +31,10 @@ export const registerMessageEvents = (io, socket) => {
 
       // Join the conversation room.
       socket.join(`conversation:${conversation._id}`);
+      console.info("[chat] joined conversation", {
+        socketId: socket.id,
+        conversationId: conversation._id.toString(),
+      });
 
       callback?.({
         success: true,
@@ -41,6 +45,39 @@ export const registerMessageEvents = (io, socket) => {
       callback?.({
         success: false,
         message: "Failed to join conversation",
+      });
+    }
+  });
+
+  socket.on("conversation:leave", async (data, callback) => {
+    try {
+      const { conversationId } = data ?? {};
+      if (!conversationId) {
+        return callback?.({
+          success: false,
+          message: "Conversation ID is required",
+        });
+      }
+
+      const conversation = await Conversation.findOne({
+        _id: conversationId,
+        participants: socket.userId,
+      }).select("_id");
+
+      if (!conversation) {
+        return callback?.({
+          success: false,
+          message: "Conversation not found or access denied",
+        });
+      }
+
+      await socket.leave(`conversation:${conversationId}`);
+      return callback?.({ success: true });
+    } catch (error) {
+      console.error("Leave conversation error:", error);
+      return callback?.({
+        success: false,
+        message: "Failed to leave conversation",
       });
     }
   });
@@ -96,6 +133,11 @@ export const registerMessageEvents = (io, socket) => {
         "message:new",
         populatedMessage,
       );
+      console.info("[chat] broadcast new message", {
+        socketId: socket.id,
+        conversationId: conversationId.toString(),
+        messageId: message._id.toString(),
+      });
 
       callback?.({
         success: true,

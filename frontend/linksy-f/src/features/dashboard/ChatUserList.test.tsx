@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getOtherUsers,
@@ -9,6 +10,16 @@ import ChatUserList from "./ChatUserList";
 vi.mock("../../services/authService", () => ({
   getOtherUsers: vi.fn(),
   searchUsers: vi.fn(),
+}));
+
+vi.mock("../../contexts/ChatSocketContext", () => ({
+  useChatSocket: () => ({ onlineUserIds: new Set<string>() }),
+}));
+
+vi.mock("../../contexts/UserContext", () => ({
+  useUser: () => ({
+    user: { id: "current-user", username: "current" },
+  }),
 }));
 
 const mockedGetOtherUsers = vi.mocked(getOtherUsers);
@@ -22,7 +33,10 @@ describe("ChatUserList", () => {
   it("loads the first page and fetches more profiles on request", async () => {
     mockedGetOtherUsers
       .mockResolvedValueOnce({
-        users: [{ id: "user-1", username: "alex", avatarUrl: null }],
+        users: [
+          { id: "current-user", username: "current", avatarUrl: null },
+          { id: "user-1", username: "alex", avatarUrl: null },
+        ],
         pagination: {
           page: 1,
           limit: 10,
@@ -32,6 +46,11 @@ describe("ChatUserList", () => {
       })
       .mockResolvedValueOnce({
         users: [
+          {
+            id: "current-user",
+            username: "current",
+            avatarUrl: null,
+          },
           {
             id: "user-2",
             username: "jordan",
@@ -46,17 +65,23 @@ describe("ChatUserList", () => {
         },
       });
 
-    render(<ChatUserList />);
+    render(
+      <MemoryRouter>
+        <ChatUserList />
+      </MemoryRouter>,
+    );
 
     expect(await screen.findByText("alex")).toBeInTheDocument();
+    expect(screen.queryByText("current")).not.toBeInTheDocument();
     expect(mockedGetOtherUsers).toHaveBeenCalledWith(1);
 
     fireEvent.click(screen.getByRole("button", { name: "Load more" }));
 
     expect(await screen.findByText("jordan")).toBeInTheDocument();
+    expect(screen.queryByText("current")).not.toBeInTheDocument();
     expect(mockedGetOtherUsers).toHaveBeenNthCalledWith(2, 2);
     expect(screen.queryByRole("button", { name: "Load more" })).not.toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "" })).toHaveAttribute(
+    expect(screen.getByRole("presentation")).toHaveAttribute(
       "src",
       "https://cdn.example.com/jordan.png",
     );
@@ -73,10 +98,15 @@ describe("ChatUserList", () => {
       },
     });
     mockedSearchUsers.mockResolvedValue([
+      { id: "current-user", username: "current", avatarUrl: null },
       { id: "user-2", username: "alexander", avatarUrl: null },
     ]);
 
-    render(<ChatUserList />);
+    render(
+      <MemoryRouter>
+        <ChatUserList />
+      </MemoryRouter>,
+    );
 
     fireEvent.change(
       screen.getByRole("searchbox", { name: "Search users by username" }),
@@ -84,6 +114,7 @@ describe("ChatUserList", () => {
     );
 
     expect(await screen.findByText("alexander")).toBeInTheDocument();
+    expect(screen.queryByText("current")).not.toBeInTheDocument();
     expect(mockedSearchUsers).toHaveBeenCalledWith("alex");
   });
 });

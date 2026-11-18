@@ -5,6 +5,18 @@ export interface ConversationMessage {
   senderUsername?: string;
   content: string;
   createdAt?: string;
+  readBy?: string[];
+}
+
+export interface MessageCursor {
+  createdAt: string;
+  id: string;
+}
+
+export interface ConversationHistoryPage {
+  messages: ConversationMessage[];
+  hasMore: boolean;
+  nextCursor: MessageCursor | null;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -41,6 +53,11 @@ export function parseConversationMessage(
     isRecord(value.senderId) && typeof value.senderId.username === "string"
       ? value.senderId.username
       : undefined;
+  const readBy = Array.isArray(value.readBy)
+    ? value.readBy
+        .map(readIdentifier)
+        .filter((userId): userId is string => userId !== null)
+    : undefined;
 
   return {
     id,
@@ -50,5 +67,6 @@ export function parseConversationMessage(
     content: value.content,
     createdAt:
       typeof value.createdAt === "string" ? value.createdAt : undefined,
+    readBy,
   };
 }

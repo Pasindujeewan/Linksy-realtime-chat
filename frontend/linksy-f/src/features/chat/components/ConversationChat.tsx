@@ -1,4 +1,5 @@
 import { MessageCircle, RotateCw } from "lucide-react";
+import { useEffect, useRef } from "react";
 import MessageComposer from "./MessageComposer";
 import { useConversation } from "../hooks/useConversation";
 
@@ -24,15 +25,44 @@ export default function ConversationChat({
   currentUserId,
   recipientName,
 }: ConversationChatProps) {
-  const { messages, connectionStatus, error, retry, sendMessage } =
-    useConversation(recipientId);
+  const {
+    messages,
+    connectionStatus,
+    error,
+    retry,
+    sendMessage,
+    hasMoreMessages,
+    isLoadingOlderMessages,
+    loadOlderMessages,
+  } = useConversation(recipientId, currentUserId);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const latestMessageId = messages.at(-1)?.id;
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (container) container.scrollTop = container.scrollHeight;
+  }, [latestMessageId]);
 
   return (
     <div className="flex min-h-[22rem] flex-1 flex-col">
       <div
+        ref={messagesContainerRef}
         aria-live="polite"
         className="flex-1 space-y-3 overflow-y-auto p-4 sm:p-6"
       >
+        {hasMoreMessages && (
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={loadOlderMessages}
+              disabled={isLoadingOlderMessages}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isLoadingOlderMessages ? "Loading…" : "Load older messages"}
+            </button>
+          </div>
+        )}
+
         {connectionStatus === "connecting" && messages.length === 0 && (
           <p role="status" className="py-8 text-center text-sm text-slate-500">
             Joining conversation…
@@ -100,6 +130,11 @@ export default function ConversationChat({
                   >
                     {messageTime}
                   </time>
+                )}
+                {isOwnMessage && message.readBy?.includes(recipientId) && (
+                  <span className="mt-1 block text-right text-xs text-indigo-100">
+                    Seen
+                  </span>
                 )}
               </article>
             </div>

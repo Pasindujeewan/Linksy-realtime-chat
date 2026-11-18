@@ -74,6 +74,15 @@ export async function joinConversation(
   return conversationId;
 }
 
+export async function leaveConversation(
+  socket: Socket,
+  conversationId: string,
+): Promise<void> {
+  await emitWithAcknowledgement(socket, "conversation:leave", {
+    conversationId,
+  });
+}
+
 export async function sendConversationMessage(
   socket: Socket,
   conversationId: string,
@@ -90,4 +99,11 @@ export async function sendConversationMessage(
   }
 
   return message;
+}
+
+export async function markConversationRead(
+  socket: Socket,
+  conversationId: string,
+): Promise<void> {
+  await emitWithAcknowledgement(socket, "message:read", { conversationId });
 }
