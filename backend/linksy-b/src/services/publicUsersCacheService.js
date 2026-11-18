@@ -22,7 +22,7 @@ export const getPublicUsersCacheVersion = async () => {
 
 export const getPublicUsersCache = async (cacheKey) => {
   const cached = await getValue(cacheKey);
-  return cached ? JSON.parse(cached) : null;
+  return cached === null ? null : JSON.parse(cached);
 };
 
 export const setPublicUsersCache = async (cacheKey, data) => {

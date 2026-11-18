@@ -16,6 +16,7 @@ import { successResponse } from "../utils/response.js";
 import mongoose from "mongoose";
 import { getPendingUpload } from "../services/pendingUploadService.js";
 import { setValue } from "../utils/redisUtils.js";
+import { invalidatePublicUsersCache } from "../services/publicUsersCacheService.js";
 import { authenticateGoogleUser } from "../services/googleAuthService.js";
 
 const accessTokenCookieOptions = {
@@ -157,6 +158,12 @@ export const registerUser = async (req, res, next) => {
       bio,
       avatarUrl: pendingUpload, // Save the S3 image key as avatarUrl
     });
+
+    try {
+      await invalidatePublicUsersCache();
+    } catch (error) {
+      console.error("Failed to invalidate public users cache:", error);
+    }
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
