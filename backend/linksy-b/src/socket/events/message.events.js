@@ -45,6 +45,39 @@ export const registerMessageEvents = (io, socket) => {
     }
   });
 
+  socket.on("conversation:leave", async (data, callback) => {
+    try {
+      const { conversationId } = data ?? {};
+      if (!conversationId) {
+        return callback?.({
+          success: false,
+          message: "Conversation ID is required",
+        });
+      }
+
+      const conversation = await Conversation.findOne({
+        _id: conversationId,
+        participants: socket.userId,
+      }).select("_id");
+
+      if (!conversation) {
+        return callback?.({
+          success: false,
+          message: "Conversation not found or access denied",
+        });
+      }
+
+      await socket.leave(`conversation:${conversationId}`);
+      return callback?.({ success: true });
+    } catch (error) {
+      console.error("Leave conversation error:", error);
+      return callback?.({
+        success: false,
+        message: "Failed to leave conversation",
+      });
+    }
+  });
+
   // Send a message.
   socket.on("message:send", async (data, callback) => {
     try {

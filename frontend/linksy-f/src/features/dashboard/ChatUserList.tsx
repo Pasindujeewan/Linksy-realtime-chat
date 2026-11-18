@@ -1,6 +1,7 @@
 import { Search, UserRound, UsersRound } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
+import { useChatSocket } from "../../contexts/ChatSocketContext";
 import {
   getOtherUsers,
   searchUsers as searchUsersByUsername,
@@ -8,6 +9,7 @@ import {
 import type { DirectoryUser, UserDirectoryPage } from "../../types/auth";
 
 export default function ChatUserList() {
+  const { onlineUserIds } = useChatSocket();
   const [users, setUsers] = useState<DirectoryUser[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchedUsers, setSearchedUsers] = useState<DirectoryUser[]>([]);
@@ -229,6 +231,15 @@ export default function ChatUserList() {
                   <span className="truncate text-sm font-semibold text-slate-800">
                     {user.username}
                   </span>
+                  {onlineUserIds.has(user.id) && (
+                    <span className="ml-auto flex shrink-0 items-center gap-1.5 text-xs text-emerald-700">
+                      <span
+                        aria-hidden="true"
+                        className="h-2 w-2 rounded-full bg-emerald-500"
+                      />
+                      Online
+                    </span>
+                  )}
                 </Link>
               </li>
             ))}

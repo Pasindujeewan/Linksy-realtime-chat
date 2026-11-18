@@ -13,6 +13,8 @@ export const registerPresenceEvents = (io, socket) => {
 
   userSockets.add(socket.id);
 
+  socket.emit("presence:snapshot", [...onlineUsers.keys()]);
+
   // Notify clients that this user is online.
   if (userSockets.size === 1) {
     io.emit("presence:update", {
