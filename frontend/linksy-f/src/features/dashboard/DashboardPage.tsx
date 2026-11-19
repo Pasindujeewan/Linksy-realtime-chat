@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router";
 import ChatUserList from "./ChatUserList";
 import { useUser } from "../../contexts/UserContext";
 import { useToast } from "../../contexts/ToastContext";
+import "./DashboardPage.css";
 
 export default function DashboardPage() {
   const { user, isLoadingProfile, logout } = useUser();
@@ -34,46 +35,41 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link
-            to="/dashboard"
-            className="flex items-center gap-2.5 text-lg font-bold tracking-tight text-indigo-700"
-          >
+    <main className="dashboard-shell">
+      <header className="dashboard-header">
+        <div className="dashboard-header-inner">
+          <Link to="/dashboard" className="dashboard-brand">
             <img
               src="/linksy-logo.svg"
               alt=""
               aria-hidden="true"
-              className="h-10 w-10 rounded-xl"
+              className="dashboard-brand-mark"
             />
             <span>Linksy</span>
           </Link>
-          <div className="flex items-center gap-3">
-            <div className="hidden text-right sm:block">
-              <p className="text-sm font-semibold text-slate-800">
-                {displayName}
-              </p>
-              <p className="text-xs text-slate-500">Your account</p>
+          <div className="dashboard-header-actions">
+            <div className="dashboard-header-identity">
+              <span className="dashboard-header-name">{displayName}</span>
+              <span className="dashboard-header-caption">Your account</span>
             </div>
             <Link
               to="/profile"
               aria-label="View your profile"
               title="View your profile"
-              className="rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              className="dashboard-avatar-link"
             >
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
                   alt=""
-                  className="h-10 w-10 rounded-full border border-slate-200 object-cover"
+                  className="dashboard-header-avatar"
                 />
               ) : (
                 <span
                   aria-hidden="true"
-                  className="grid h-10 w-10 place-items-center rounded-full bg-indigo-50 text-indigo-500"
+                  className="dashboard-header-avatar dashboard-avatar-fallback"
                 >
-                  <UserRound className="h-5 w-5" />
+                  <UserRound />
                 </span>
               )}
             </Link>
@@ -81,7 +77,7 @@ export default function DashboardPage() {
               type="button"
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+              className="dashboard-logout"
             >
               <LogOut aria-hidden="true" className="h-4 w-4" />
               {isLoggingOut ? "Logging out…" : "Log out"}
@@ -90,23 +86,54 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <p className="text-sm font-medium text-indigo-600">Your dashboard</p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-            Welcome, {displayName}
-          </h1>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            Your space for staying close to the people who matter.
+      <div className="dashboard-content">
+        <section className="dashboard-intro" aria-labelledby="dashboard-title">
+          <p className="dashboard-eyebrow">YOUR LINKSY SPACE</p>
+          <h1 id="dashboard-title">Good to see you, {displayName}.</h1>
+          <p>
+            Find someone from the community and open their profile to say hello.
           </p>
-        </div>
+        </section>
 
         {isLoadingProfile && (
-          <p role="status" className="mb-4 text-sm text-slate-500">
+          <p role="status" className="dashboard-loading">
             Loading your profile…
           </p>
         )}
-        <ChatUserList />
+
+        <div className="dashboard-layout">
+          <ChatUserList />
+          <aside
+            className="dashboard-profile-card"
+            aria-labelledby="account-heading"
+          >
+            <p className="dashboard-card-kicker">YOUR ACCOUNT</p>
+            <div className="dashboard-profile-summary">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt=""
+                  className="dashboard-profile-avatar"
+                />
+              ) : (
+                <span
+                  aria-hidden="true"
+                  className="dashboard-profile-avatar dashboard-profile-avatar-fallback"
+                >
+                  <UserRound />
+                </span>
+              )}
+              <div className="dashboard-profile-copy">
+                <h2 id="account-heading">{displayName}</h2>
+                <p>Linksy member</p>
+              </div>
+            </div>
+            <Link to="/profile" className="dashboard-profile-link">
+              Edit your profile
+              <span aria-hidden="true">→</span>
+            </Link>
+          </aside>
+        </div>
       </div>
     </main>
   );
