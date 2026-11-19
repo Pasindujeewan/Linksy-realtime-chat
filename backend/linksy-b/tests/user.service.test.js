@@ -1,4 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+// mock env varibles
+vi.hoisted(() => {
+  process.env.MONGODB_URI = "mongodb://127.0.0.1:27017/linksy-test";
+  process.env.JWT_ACCESS_SECRET = "test-only-access-secret";
+  process.env.AWS_REGION = "us-east-1";
+  process.env.AWS_S3_BUCKET = "linksy-test-bucket";
+  process.env.REDIS_URL = "redis://127.0.0.1:6379";
+});
 
 import User from "../src/models/user.model.js";
 import { generateImageUrl } from "../src/utils/generateImageUrl.js";
