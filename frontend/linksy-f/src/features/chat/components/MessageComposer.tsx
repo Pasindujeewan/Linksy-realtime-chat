@@ -1,5 +1,6 @@
 import { SendHorizontal } from "lucide-react";
 import { useState, type FormEvent } from "react";
+import "./ConversationChat.css";
 
 interface MessageComposerProps {
   disabled: boolean;
@@ -36,13 +37,13 @@ export default function MessageComposer({
   }
 
   return (
-    <div className="border-t border-slate-200 bg-white p-3 sm:p-4">
+    <div className="message-composer">
       {error && (
-        <p role="alert" className="mb-2 px-1 text-sm text-rose-600">
+        <p role="alert" className="message-composer-error">
           {error}
         </p>
       )}
-      <form onSubmit={handleSubmit} className="flex items-center gap-2">
+      <form onSubmit={handleSubmit} className="message-composer-form">
         <label className="sr-only" htmlFor="conversation-message">
           Type a message
         </label>
@@ -57,14 +58,15 @@ export default function MessageComposer({
           }
           autoComplete="off"
           disabled={disabled || isSending}
-          className="min-w-0 flex-1 rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:cursor-not-allowed disabled:bg-slate-50"
+          className="message-composer-input"
         />
         <button
           type="submit"
           disabled={disabled || isSending || !content.trim()}
-          className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          aria-label={isSending ? "Sending message" : "Send message"}
+          className="message-composer-send"
         >
-          <SendHorizontal aria-hidden="true" className="h-4 w-4" />
+          <SendHorizontal aria-hidden="true" />
           <span>{isSending ? "Sending…" : "Send"}</span>
         </button>
       </form>
