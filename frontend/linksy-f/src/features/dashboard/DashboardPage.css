@@ -1,11 +1,11 @@
 .dashboard-shell {
   min-height: 100vh;
-  background: #f5f6f2;
-  color: #202b27;
+  background: #f7f8fc;
+  color: #172033;
 }
 
 .dashboard-header {
-  border-bottom: 1px solid #e6e9e3;
+  border-bottom: 1px solid #e2e8f0;
   background: #fff;
 }
 
@@ -27,7 +27,7 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: #263d34;
+  color: #4338ca;
   font-size: 19px;
   font-weight: 750;
   letter-spacing: -0.5px;
@@ -55,7 +55,7 @@
 .dashboard-header-name {
   max-width: 180px;
   overflow: hidden;
-  color: #26352e;
+  color: #1e293b;
   font-size: 13px;
   font-weight: 650;
   text-overflow: ellipsis;
@@ -84,8 +84,8 @@
 
 .dashboard-avatar-fallback,
 .dashboard-profile-avatar-fallback {
-  background: #eaf2ed;
-  color: #3d7058;
+  background: var(--linksy-primary-soft);
+  color: var(--linksy-primary-muted);
 }
 
 .dashboard-avatar-fallback svg {
@@ -129,9 +129,9 @@
 
 .dashboard-logout:hover,
 .people-secondary-button:hover {
-  border-color: #cbd9ce;
-  background: #f6f9f6;
-  color: #315d48;
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #334155;
 }
 
 .dashboard-logout:focus-visible,
@@ -139,7 +139,7 @@
 .dashboard-avatar-link:focus-visible,
 .dashboard-profile-link:focus-visible,
 .people-user-link:focus-visible {
-  outline: 3px solid #86b69b;
+  outline: 3px solid var(--linksy-primary-focus);
   outline-offset: 3px;
 }
 
@@ -161,7 +161,7 @@
 .dashboard-card-kicker,
 .people-panel-kicker {
   margin: 0;
-  color: #4b8063;
+  color: var(--linksy-primary);
   font-size: 10px;
   font-weight: 750;
   letter-spacing: 1.15px;
@@ -169,7 +169,7 @@
 
 .dashboard-intro h1 {
   margin: 10px 0 0;
-  color: #24352c;
+  color: #0f172a;
   font-size: clamp(27px, 4vw, 36px);
   font-weight: 650;
   letter-spacing: -1.4px;
@@ -237,8 +237,8 @@
   flex: 0 0 auto;
   place-items: center;
   border-radius: 12px;
-  background: #edf4ee;
-  color: #47765a;
+  background: var(--linksy-primary-soft);
+  color: var(--linksy-primary);
 }
 
 .people-heading-icon svg {
@@ -283,8 +283,8 @@
 }
 
 .people-search input:focus {
-  border-color: #83aa8f;
-  box-shadow: 0 0 0 3px rgb(91 145 106 / 12%);
+  border-color: var(--linksy-primary-muted);
+  box-shadow: 0 0 0 3px rgb(79 70 229 / 12%);
 }
 
 .people-message {
@@ -322,7 +322,7 @@
 .people-empty-state > svg {
   width: 25px;
   height: 25px;
-  color: #78937e;
+  color: var(--linksy-primary-muted);
 }
 
 .people-empty-state h3 {
@@ -362,8 +362,8 @@
 
 .people-list-item:hover {
   transform: translateY(-1px);
-  border-color: #cbdccf;
-  background: #fbfdfb;
+  border-color: var(--linksy-primary-border);
+  background: #f8f9ff;
 }
 
 .people-user-link {
@@ -390,8 +390,8 @@
 }
 
 .people-user-avatar-fallback {
-  background: #edf4ee;
-  color: #548064;
+  background: var(--linksy-primary-soft);
+  color: var(--linksy-primary-muted);
 }
 
 .people-user-avatar-fallback svg {
@@ -496,7 +496,7 @@
   padding: 0 12px;
   border: 1px solid #e3e9e3;
   border-radius: 9px;
-  color: #456b50;
+  color: var(--linksy-primary);
   font-size: 12px;
   font-weight: 650;
   text-decoration: none;
@@ -506,8 +506,8 @@
 }
 
 .dashboard-profile-link:hover {
-  border-color: #cbdccf;
-  background: #f6faf6;
+  border-color: var(--linksy-primary-border);
+  background: #f8f9ff;
 }
 
 .dashboard-profile-link span {

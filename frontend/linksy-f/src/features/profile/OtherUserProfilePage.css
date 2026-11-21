@@ -1,11 +1,11 @@
 .other-profile-shell {
   min-height: 100vh;
-  background: #f5f6f2;
-  color: #202b27;
+  background: #f7f8fc;
+  color: #172033;
 }
 
 .other-profile-topbar {
-  border-bottom: 1px solid #e6e9e3;
+  border-bottom: 1px solid #e2e8f0;
   background: #fff;
 }
 
@@ -32,7 +32,7 @@
 
 .other-profile-brand {
   gap: 9px;
-  color: #263d34;
+  color: #4338ca;
   font-size: 18px;
   font-weight: 750;
   letter-spacing: -0.5px;
@@ -54,7 +54,7 @@
 }
 
 .other-profile-back:hover {
-  color: #315d48;
+  color: var(--linksy-primary);
 }
 
 .other-profile-back svg {
@@ -142,8 +142,8 @@
 }
 
 .other-profile-avatar-fallback {
-  background: #eaf2ed;
-  color: #47765a;
+  background: var(--linksy-primary-soft);
+  color: var(--linksy-primary-muted);
 }
 
 .other-profile-avatar-fallback svg {
@@ -157,7 +157,7 @@
 
 .other-profile-kicker {
   margin: 0;
-  color: #4b8063;
+  color: var(--linksy-primary);
   font-size: 10px;
   font-weight: 750;
   letter-spacing: 1px;
@@ -212,7 +212,7 @@
   min-height: 430px;
   flex-direction: column;
   border-top: 1px solid #e7ebe5;
-  background: #f7f8f5;
+  background: #f7f8fc;
 }
 
 .other-chat-heading {
@@ -232,8 +232,8 @@
   flex: 0 0 auto;
   place-items: center;
   border-radius: 11px;
-  background: #edf4ee;
-  color: #47765a;
+  background: var(--linksy-primary-soft);
+  color: var(--linksy-primary);
 }
 
 .other-chat-heading-icon svg {
@@ -256,7 +256,7 @@
 
 .other-profile-back:focus-visible,
 .other-profile-retry:focus-visible {
-  outline: 3px solid #86b69b;
+  outline: 3px solid var(--linksy-primary-focus);
   outline-offset: 3px;
 }
 

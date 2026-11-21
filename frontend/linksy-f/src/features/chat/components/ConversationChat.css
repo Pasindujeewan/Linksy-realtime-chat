@@ -64,7 +64,7 @@
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: #4b7958;
+  color: var(--linksy-primary);
   font-size: 11px;
   font-weight: 650;
   cursor: pointer;
@@ -74,8 +74,8 @@
 }
 
 .conversation-history-button:hover {
-  background: #eaf1ea;
-  color: #315d48;
+  background: var(--linksy-primary-soft);
+  color: var(--linksy-primary-hover);
 }
 
 .conversation-history-button:disabled {
@@ -149,8 +149,8 @@
   margin: 0 auto;
   place-items: center;
   border-radius: 15px;
-  background: #eaf2ed;
-  color: #47765a;
+  background: var(--linksy-primary-soft);
+  color: var(--linksy-primary);
 }
 
 .conversation-empty-icon svg {
@@ -191,9 +191,9 @@
 }
 
 .conversation-message-own {
-  border-color: #456f54;
+  border-color: var(--linksy-primary);
   border-radius: 15px 15px 4px 15px;
-  background: #456f54;
+  background: var(--linksy-primary);
   color: #fff;
 }
 
@@ -216,7 +216,7 @@
 
 .conversation-message-own .conversation-message-time,
 .conversation-message-own .conversation-seen {
-  color: #d6e5d9;
+  color: #e0e7ff;
 }
 
 .message-composer {
@@ -258,8 +258,8 @@
 }
 
 .message-composer-input:focus {
-  border-color: #83aa8f;
-  box-shadow: 0 0 0 3px rgb(91 145 106 / 12%);
+  border-color: var(--linksy-primary-muted);
+  box-shadow: 0 0 0 3px rgb(79 70 229 / 12%);
 }
 
 .message-composer-input:disabled {
@@ -278,7 +278,7 @@
   padding: 0 13px;
   border: 0;
   border-radius: 10px;
-  background: #456f54;
+  background: var(--linksy-primary);
   color: #fff;
   font-size: 12px;
   font-weight: 650;
@@ -287,7 +287,7 @@
 }
 
 .message-composer-send:hover {
-  background: #365d44;
+  background: var(--linksy-primary-hover);
 }
 
 .message-composer-send:disabled {
@@ -303,7 +303,7 @@
 .conversation-history-button:focus-visible,
 .conversation-retry:focus-visible,
 .message-composer-send:focus-visible {
-  outline: 3px solid #86b69b;
+  outline: 3px solid var(--linksy-primary-focus);
   outline-offset: 3px;
 }
 
