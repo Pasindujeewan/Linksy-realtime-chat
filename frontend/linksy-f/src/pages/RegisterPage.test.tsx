@@ -189,7 +189,7 @@ describe("RegisterPage", () => {
     expect(mockedUploadProfileImage.mock.invocationCallOrder[0]).toBeLessThan(
       mockedRegisterUser.mock.invocationCallOrder[0],
     );
-    expect(await screen.findByRole("heading", { name: "Welcome, alex_morgan" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Good to see you, alex_morgan." })).toBeInTheDocument();
     await user.click(screen.getByRole("link", { name: "View your profile" }));
     expect(await screen.findByAltText("alex_morgan's profile")).toHaveAttribute(
       "src",
