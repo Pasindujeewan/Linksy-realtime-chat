@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
 import { AppError } from "../errors/AppError.js";
-import { getConversationMessages as fetchConversationMessages } from "../services/conversation.service.js";
+import {
+  deleteConversation as deleteConversationById,
+  getConversationMessages as fetchConversationMessages,
+} from "../services/conversation.service.js";
 import { successResponse } from "../utils/response.js";
 
 const DEFAULT_MESSAGE_LIMIT = 50;
@@ -58,6 +61,30 @@ export const getConversationMessages = async (req, res, next) => {
       res,
       result,
       "Conversation messages retrieved successfully",
+    );
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const deleteConversation = async (req, res, next) => {
+  try {
+    const { conversationId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+      throw new AppError(
+        "Invalid conversation ID",
+        400,
+        "INVALID_CONVERSATION_ID",
+      );
+    }
+
+    await deleteConversationById(conversationId, req.user.sub);
+
+    return successResponse(
+      res,
+      null,
+      "Conversation deleted successfully",
+      200,
     );
   } catch (error) {
     return next(error);
