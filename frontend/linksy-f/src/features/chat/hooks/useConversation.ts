@@ -5,7 +5,10 @@ import {
   markConversationRead,
   sendConversationMessage,
 } from "../services/chatSocket";
-import { getConversationMessages } from "../services/chatApi";
+import {
+  deleteConversation,
+  getConversationMessages,
+} from "../services/chatApi";
 import {
   parseConversationMessage,
   type ConversationMessage,
@@ -54,10 +57,12 @@ export function useConversation(recipientId: string, currentUserId: string) {
   );
   const [isLoadingOlderMessages, setIsLoadingOlderMessages] = useState(false);
   const currentConversationIdRef = useRef<string | null>(null);
+  const currentRecipientIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     let isCurrent = true;
     let activeConversationId: string | null = null;
+    currentRecipientIdRef.current = recipientId;
     currentConversationIdRef.current = null;
     setMessages([]);
     setConversationId(null);
@@ -200,12 +205,19 @@ export function useConversation(recipientId: string, currentUserId: string) {
       chatSocket.off("connect_error", handleConnectError);
       chatSocket.off("message:new", addMessage);
       chatSocket.off("message:read", handleMessageRead);
-      currentConversationIdRef.current = null;
-      if (activeConversationId && chatSocket.connected) {
+      if (
+        activeConversationId &&
+        currentConversationIdRef.current === activeConversationId &&
+        chatSocket.connected
+      ) {
         void leaveConversation(chatSocket, activeConversationId).catch(
           (leaveError) =>
             console.error("Failed to leave conversation:", leaveError),
         );
+      }
+      currentConversationIdRef.current = null;
+      if (currentRecipientIdRef.current === recipientId) {
+        currentRecipientIdRef.current = null;
       }
     };
   }, [currentUserId, recipientId, retryCount, socket]);
@@ -278,11 +290,49 @@ export function useConversation(recipientId: string, currentUserId: string) {
     [conversationId, socket],
   );
 
+  const clearConversation = useCallback(async () => {
+    if (!conversationId) {
+      throw new Error("The conversation is not ready to be cleared.");
+    }
+
+    if (socket?.connected) {
+      await leaveConversation(socket, conversationId);
+    }
+
+    try {
+      await deleteConversation(conversationId);
+    } catch (deleteError) {
+      if (socket?.connected && currentRecipientIdRef.current === recipientId) {
+        try {
+          await joinConversation(socket, recipientId);
+        } catch (joinError) {
+          console.error(
+            "Failed to rejoin conversation after clear error:",
+            joinError,
+          );
+        }
+      }
+      throw deleteError;
+    }
+
+    if (currentRecipientIdRef.current !== recipientId) return;
+
+    if (currentConversationIdRef.current === conversationId) {
+      currentConversationIdRef.current = null;
+    }
+    setMessages([]);
+    setHasMoreMessages(false);
+    setMessageCursor(null);
+    setRetryCount((currentCount) => currentCount + 1);
+  }, [conversationId, recipientId, socket]);
+
   return {
     messages,
+    conversationId,
     connectionStatus,
     error,
     retry,
+    clearConversation,
     sendMessage,
     hasMoreMessages,
     isLoadingOlderMessages,

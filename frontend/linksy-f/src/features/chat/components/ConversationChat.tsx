@@ -1,7 +1,9 @@
-import { MessageCircle, RotateCw } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { MessageCircle, RotateCw, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import MessageComposer from "./MessageComposer";
 import { useConversation } from "../hooks/useConversation";
+import { useConfirmationDialog } from "../../../contexts/ConfirmationDialogContext";
+import { useToast } from "../../../contexts/ToastContext";
 import "./ConversationChat.css";
 
 interface ConversationChatProps {
@@ -28,14 +30,19 @@ export default function ConversationChat({
 }: ConversationChatProps) {
   const {
     messages,
+    conversationId,
     connectionStatus,
     error,
     retry,
+    clearConversation,
     sendMessage,
     hasMoreMessages,
     isLoadingOlderMessages,
     loadOlderMessages,
   } = useConversation(recipientId, currentUserId);
+  const { showConfirmation } = useConfirmationDialog();
+  const toast = useToast();
+  const [isClearingConversation, setIsClearingConversation] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const latestMessageId = messages.at(-1)?.id;
   const connectionLabel =
@@ -50,14 +57,50 @@ export default function ConversationChat({
     if (container) container.scrollTop = container.scrollHeight;
   }, [latestMessageId]);
 
+  async function clearChat() {
+    setIsClearingConversation(true);
+    try {
+      await clearConversation();
+      toast.success("Chat cleared.");
+    } catch (clearError) {
+      toast.error(
+        clearError instanceof Error
+          ? clearError.message
+          : "We couldn't clear this chat. Please try again.",
+      );
+    } finally {
+      setIsClearingConversation(false);
+    }
+  }
+
+  function handleClearConversation() {
+    showConfirmation(
+      "Clear this chat? This will permanently delete the conversation and all its messages for both participants.",
+      () => {
+        void clearChat();
+      },
+    );
+  }
+
   return (
     <div className="conversation-chat">
-      <div
-        className={`conversation-status conversation-status-${connectionStatus}`}
-        role="status"
-      >
-        <span aria-hidden="true" />
-        {connectionLabel}
+      <div className="conversation-toolbar">
+        <button
+          type="button"
+          onClick={handleClearConversation}
+          disabled={!conversationId || isClearingConversation}
+          className="conversation-clear-button"
+        >
+          <Trash2 aria-hidden="true" />
+          {isClearingConversation ? "Clearing…" : "Clear chat"}
+        </button>
+        <div
+          className={`conversation-status conversation-status-${connectionStatus}`}
+          role="status"
+        >
+          <span aria-hidden="true" />
+          {connectionLabel}
+        </div>
       </div>
       <div
         ref={messagesContainerRef}

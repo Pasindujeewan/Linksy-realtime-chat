@@ -64,3 +64,18 @@ export async function getConversationMessages(
     nextCursor,
   };
 }
+
+export async function deleteConversation(conversationId: string): Promise<void> {
+  const response = await fetch(
+    `${apiUrl}/api/conversations/${encodeURIComponent(conversationId)}`,
+    {
+      method: "DELETE",
+      credentials: "include",
+    },
+  );
+  const result = (await response.json()) as ApiResponse<null>;
+
+  if (!response.ok || !result.success) {
+    throw new Error(result.message || "We couldn't clear this chat.");
+  }
+}
