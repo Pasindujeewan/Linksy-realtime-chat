@@ -3,15 +3,18 @@ import { router } from "./router/mainRouter.tsx";
 import { ToastProvider } from "./contexts/ToastContext";
 import { UserProvider } from "./contexts/UserContext";
 import { ChatSocketProvider } from "./contexts/ChatSocketContext";
+import { ConfirmationDialogProvider } from "./contexts/ConfirmationDialogContext";
 
 function App() {
   return (
     <ToastProvider>
-      <UserProvider>
-        <ChatSocketProvider>
-          <RouterProvider router={router} />
-        </ChatSocketProvider>
-      </UserProvider>
+      <ConfirmationDialogProvider>
+        <UserProvider>
+          <ChatSocketProvider>
+            <RouterProvider router={router} />
+          </ChatSocketProvider>
+        </UserProvider>
+      </ConfirmationDialogProvider>
     </ToastProvider>
   );
 }

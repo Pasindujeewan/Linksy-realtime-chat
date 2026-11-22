@@ -5,15 +5,57 @@
   flex-direction: column;
 }
 
-.conversation-status {
+.conversation-toolbar {
   display: flex;
-  min-height: 31px;
+  min-height: 43px;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 7px;
   padding: 0 22px;
+  border-bottom: 1px solid #e8ece6;
+  background: #fff;
+}
+
+.conversation-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   color: #78847b;
   font-size: 10px;
+}
+
+.conversation-clear-button {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 9px;
+  border: 1px solid #f0d7d4;
+  border-radius: 8px;
+  background: #fff;
+  color: #a64b45;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.conversation-clear-button:hover:not(:disabled) {
+  border-color: #e8c1bc;
+  background: #fff7f6;
+}
+
+.conversation-clear-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.conversation-clear-button svg {
+  width: 14px;
+  height: 14px;
 }
 
 .conversation-status > span {
@@ -301,6 +343,7 @@
 }
 
 .conversation-history-button:focus-visible,
+.conversation-clear-button:focus-visible,
 .conversation-retry:focus-visible,
 .message-composer-send:focus-visible {
   outline: 3px solid var(--linksy-primary-focus);
@@ -309,6 +352,10 @@
 
 @media (max-width: 560px) {
   .conversation-status {
+    padding: 0;
+  }
+
+  .conversation-toolbar {
     padding: 0 15px;
   }
 
@@ -338,6 +385,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .conversation-history-button,
+  .conversation-clear-button,
   .message-composer-input,
   .message-composer-send {
     transition: none;
