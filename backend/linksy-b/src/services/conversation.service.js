@@ -81,3 +81,23 @@ export const getConversationMessages = async (
         : null,
   };
 };
+
+export const deleteConversation = async (conversationId, userId) => {
+  const conversation = await Conversation.findOne({
+    _id: conversationId,
+    participants: userId,
+  })
+    .select("_id")
+    .lean();
+
+  if (!conversation) {
+    throw new AppError(
+      "Conversation not found or access denied",
+      404,
+      "CONVERSATION_NOT_FOUND",
+    );
+  }
+
+  await Message.deleteMany({ conversationId });
+  await Conversation.deleteOne({ _id: conversationId, participants: userId });
+};
