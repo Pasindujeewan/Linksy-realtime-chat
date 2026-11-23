@@ -84,8 +84,25 @@ export function useConversation(recipientId: string, currentUserId: string) {
 
     function addMessage(payload: unknown) {
       const message = parseConversationMessage(payload);
-      console.log("Received new message:", message);
-      if (!message || message.conversationId !== activeConversationId) return;
+      if (!message) {
+        console.warn("[chat] message:new received an invalid payload", payload);
+        return;
+      }
+
+      console.info("[chat] message:new received", {
+        messageId: message.id,
+        messageConversationId: message.conversationId,
+        activeConversationId,
+      });
+
+      if (message.conversationId !== activeConversationId) {
+        console.warn("[chat] Ignoring message for a different conversation", {
+          messageId: message.id,
+          messageConversationId: message.conversationId,
+          activeConversationId,
+        });
+        return;
+      }
 
       setMessages((currentMessages) =>
         mergeMessages(currentMessages, [message]),
@@ -136,7 +153,11 @@ export function useConversation(recipientId: string, currentUserId: string) {
           recipientId,
         );
         if (!isCurrent || !chatSocket.connected) {
-          if (!isCurrent && chatSocket.connected) {
+          if (
+            !isCurrent &&
+            chatSocket.connected &&
+            currentRecipientIdRef.current !== recipientId
+          ) {
             void leaveConversation(chatSocket, joinedConversationId).catch(
               (leaveError) =>
                 console.error("Failed to leave conversation:", leaveError),
@@ -149,6 +170,11 @@ export function useConversation(recipientId: string, currentUserId: string) {
         currentConversationIdRef.current = joinedConversationId;
         setActiveConversationId(joinedConversationId);
         setConversationId(joinedConversationId);
+        console.info("[chat] joined conversation", {
+          socketId: chatSocket.id,
+          conversationId: joinedConversationId,
+          recipientId,
+        });
         const history = await getConversationMessages(joinedConversationId);
         if (
           !isCurrent ||
@@ -202,6 +228,11 @@ export function useConversation(recipientId: string, currentUserId: string) {
     chatSocket.on("connect_error", handleConnectError);
     chatSocket.on("message:new", addMessage);
     chatSocket.on("message:read", handleMessageRead);
+    console.info("[chat] listening for message:new", {
+      socketId: chatSocket.id,
+      connected: chatSocket.connected,
+      recipientId,
+    });
     if (chatSocket.connected) {
       void joinActiveConversation();
     }
