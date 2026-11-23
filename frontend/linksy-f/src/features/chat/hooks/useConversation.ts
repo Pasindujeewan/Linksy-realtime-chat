@@ -15,6 +15,7 @@ import {
   type MessageCursor,
 } from "../types";
 import { useChatSocket } from "../../../contexts/ChatSocketContext";
+import { useMessageNotifications } from "../../../contexts/MessageNotificationContext";
 
 type ConnectionStatus = "connecting" | "ready" | "error";
 
@@ -45,6 +46,7 @@ function mergeMessages(
 
 export function useConversation(recipientId: string, currentUserId: string) {
   const { socket, connectionError } = useChatSocket();
+  const { setActiveConversationId } = useMessageNotifications();
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] =
@@ -64,6 +66,7 @@ export function useConversation(recipientId: string, currentUserId: string) {
     let activeConversationId: string | null = null;
     currentRecipientIdRef.current = recipientId;
     currentConversationIdRef.current = null;
+    setActiveConversationId(null);
     setMessages([]);
     setConversationId(null);
     setConnectionStatus("connecting");
@@ -81,6 +84,7 @@ export function useConversation(recipientId: string, currentUserId: string) {
 
     function addMessage(payload: unknown) {
       const message = parseConversationMessage(payload);
+      console.log("Received new message:", message);
       if (!message || message.conversationId !== activeConversationId) return;
 
       setMessages((currentMessages) =>
@@ -143,6 +147,7 @@ export function useConversation(recipientId: string, currentUserId: string) {
 
         activeConversationId = joinedConversationId;
         currentConversationIdRef.current = joinedConversationId;
+        setActiveConversationId(joinedConversationId);
         setConversationId(joinedConversationId);
         const history = await getConversationMessages(joinedConversationId);
         if (
@@ -167,7 +172,9 @@ export function useConversation(recipientId: string, currentUserId: string) {
       } catch (joinError) {
         if (!isCurrent) return;
         setConnectionStatus("error");
-        setError(errorMessage(joinError, "We couldn't join this conversation."));
+        setError(
+          errorMessage(joinError, "We couldn't join this conversation."),
+        );
       }
     }
 
@@ -179,6 +186,7 @@ export function useConversation(recipientId: string, currentUserId: string) {
       if (!isCurrent) return;
       activeConversationId = null;
       currentConversationIdRef.current = null;
+      setActiveConversationId(null);
       setConversationId(null);
       setConnectionStatus("connecting");
     }
@@ -216,11 +224,12 @@ export function useConversation(recipientId: string, currentUserId: string) {
         );
       }
       currentConversationIdRef.current = null;
+      setActiveConversationId(null);
       if (currentRecipientIdRef.current === recipientId) {
         currentRecipientIdRef.current = null;
       }
     };
-  }, [currentUserId, recipientId, retryCount, socket]);
+  }, [currentUserId, recipientId, retryCount, setActiveConversationId, socket]);
 
   useEffect(() => {
     if (socket && !socket.connected && connectionError) {
@@ -267,12 +276,7 @@ export function useConversation(recipientId: string, currentUserId: string) {
         setIsLoadingOlderMessages(false);
       }
     }
-  }, [
-    conversationId,
-    hasMoreMessages,
-    isLoadingOlderMessages,
-    messageCursor,
-  ]);
+  }, [conversationId, hasMoreMessages, isLoadingOlderMessages, messageCursor]);
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -285,7 +289,9 @@ export function useConversation(recipientId: string, currentUserId: string) {
         conversationId,
         content,
       );
-      setMessages((currentMessages) => mergeMessages(currentMessages, [message]));
+      setMessages((currentMessages) =>
+        mergeMessages(currentMessages, [message]),
+      );
     },
     [conversationId, socket],
   );

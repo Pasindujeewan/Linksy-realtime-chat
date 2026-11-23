@@ -8,6 +8,15 @@ export interface ConversationMessage {
   readBy?: string[];
 }
 
+export interface IncomingMessageNotification {
+  messageId: string;
+  conversationId: string;
+  senderId: string;
+  senderUsername: string;
+  preview: string;
+  createdAt?: string;
+}
+
 export interface MessageCursor {
   createdAt: string;
   id: string;
@@ -30,6 +39,38 @@ function readIdentifier(value: unknown): string | null {
   if (typeof value.id === "string" && value.id.length > 0) return value.id;
   if (typeof value._id === "string" && value._id.length > 0) return value._id;
   return null;
+}
+
+export function parseIncomingMessageNotification(
+  value: unknown,
+): IncomingMessageNotification | null {
+  if (!isRecord(value)) return null;
+
+  const { messageId, conversationId, senderId, senderUsername, preview } =
+    value;
+  if (
+    typeof messageId !== "string" ||
+    !messageId ||
+    typeof conversationId !== "string" ||
+    !conversationId ||
+    typeof senderId !== "string" ||
+    !senderId ||
+    typeof senderUsername !== "string" ||
+    !senderUsername ||
+    typeof preview !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    messageId,
+    conversationId,
+    senderId,
+    senderUsername,
+    preview,
+    createdAt:
+      typeof value.createdAt === "string" ? value.createdAt : undefined,
+  };
 }
 
 export function parseConversationMessage(
