@@ -133,6 +133,24 @@ export const registerMessageEvents = (io, socket) => {
         "message:new",
         populatedMessage,
       );
+      // find all participants except the sender and send them a notification
+      const senderId = socket.userId.toString();
+      const notification = {
+        messageId: message._id.toString(),
+        conversationId: conversation._id.toString(),
+        senderId,
+        senderUsername: populatedMessage.senderId.username,
+        preview: message.content.slice(0, 120),
+        createdAt: message.createdAt,
+      };
+      // Send notification to all participants except the sender
+      for (const participantId of conversation.participants) {
+        const recipientId = participantId.toString();
+        if (recipientId === senderId) continue;
+
+        io.to(`user:${recipientId}`).emit("notification:new", notification);
+      }
+
       console.info("[chat] broadcast new message", {
         socketId: socket.id,
         conversationId: conversationId.toString(),
