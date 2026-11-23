@@ -4,6 +4,7 @@ import { ToastProvider } from "./contexts/ToastContext";
 import { UserProvider } from "./contexts/UserContext";
 import { ChatSocketProvider } from "./contexts/ChatSocketContext";
 import { ConfirmationDialogProvider } from "./contexts/ConfirmationDialogContext";
+import { MessageNotificationProvider } from "./contexts/MessageNotificationContext";
 
 function App() {
   return (
@@ -11,7 +12,9 @@ function App() {
       <ConfirmationDialogProvider>
         <UserProvider>
           <ChatSocketProvider>
-            <RouterProvider router={router} />
+            <MessageNotificationProvider>
+              <RouterProvider router={router} />
+            </MessageNotificationProvider>
           </ChatSocketProvider>
         </UserProvider>
       </ConfirmationDialogProvider>
