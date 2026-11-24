@@ -234,7 +234,17 @@ export default function ChatUserList() {
                       <UserRound />
                     </span>
                   )}
-                  <span className="people-user-name">{user.username}</span>
+                  <span className="people-user-details">
+                    <span className="people-user-name">{user.username}</span>
+                    {user.lastMessage && (
+                      <span
+                        className="people-user-last-message"
+                        title={user.lastMessage}
+                      >
+                        {user.lastMessage}
+                      </span>
+                    )}
+                  </span>
                   {onlineUserIds.has(user.id) && (
                     <span className="people-online">
                       <span aria-hidden="true" className="people-online-dot" />

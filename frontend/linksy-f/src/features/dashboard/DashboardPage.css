@@ -409,6 +409,21 @@
   white-space: nowrap;
 }
 
+.people-user-details {
+  display: grid;
+  min-width: 0;
+  flex: 1 1 auto;
+  gap: 4px;
+}
+
+.people-user-last-message {
+  overflow: hidden;
+  color: #849087;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .people-online {
   display: inline-flex;
   flex: 0 0 auto;
