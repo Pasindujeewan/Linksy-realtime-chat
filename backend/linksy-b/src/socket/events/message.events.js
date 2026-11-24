@@ -1,0 +1,173 @@
+import Conversation from "../../models/conversation.model.js";
+import Message from "../../models/meassage.model.js";
+import { createOrGetConversation } from "../../services/conversation.service.js";
+
+export const registerMessageEvents = (io, socket) => {
+  // Join a conversation room.
+  socket.on("conversation:join", async (data, callback) => {
+    try {
+      const { recipientId } = data;
+
+      if (!recipientId) {
+        return callback?.({
+          success: false,
+          message: "Recipient ID is required",
+        });
+      }
+
+      // Prevent creating a conversation with yourself.
+      if (recipientId.toString() === socket.userId.toString()) {
+        return callback?.({
+          success: false,
+          message: "Cannot create a conversation with yourself",
+        });
+      }
+
+      // Find existing conversation or create a new one.
+      const conversation = await createOrGetConversation(
+        socket.userId,
+        recipientId,
+      );
+
+      // Join the conversation room.
+      socket.join(`conversation:${conversation._id}`);
+      console.info("[chat] joined conversation", {
+        socketId: socket.id,
+        conversationId: conversation._id.toString(),
+      });
+
+      callback?.({
+        success: true,
+        conversation,
+      });
+    } catch (error) {
+      console.error("Join conversation error:", error);
+      callback?.({
+        success: false,
+        message: "Failed to join conversation",
+      });
+    }
+  });
+
+  socket.on("conversation:leave", async (data, callback) => {
+    try {
+      const { conversationId } = data ?? {};
+      if (!conversationId) {
+        return callback?.({
+          success: false,
+          message: "Conversation ID is required",
+        });
+      }
+
+      const conversation = await Conversation.findOne({
+        _id: conversationId,
+        participants: socket.userId,
+      }).select("_id");
+
+      if (!conversation) {
+        return callback?.({
+          success: false,
+          message: "Conversation not found or access denied",
+        });
+      }
+
+      await socket.leave(`conversation:${conversationId}`);
+      return callback?.({ success: true });
+    } catch (error) {
+      console.error("Leave conversation error:", error);
+      return callback?.({
+        success: false,
+        message: "Failed to leave conversation",
+      });
+    }
+  });
+
+  // Send a message.
+  socket.on("message:send", async (data, callback) => {
+    try {
+      const { conversationId, content } = data;
+
+      if (
+        !conversationId ||
+        typeof content !== "string" ||
+        !content.trim() ||
+        content.length > 5000
+      ) {
+        return callback?.({
+          success: false,
+          message: "Invalid message data",
+        });
+      }
+
+      const conversation = await Conversation.findOne({
+        _id: conversationId,
+        participants: socket.userId,
+      });
+
+      if (!conversation) {
+        return callback?.({
+          success: false,
+          message: "Conversation not found or access denied",
+        });
+      }
+
+      const message = await Message.create({
+        conversationId,
+        senderId: socket.userId,
+        content: content.trim(),
+        messageType: "text",
+        readBy: [socket.userId],
+      });
+
+      // Update the conversation's latest message.
+      conversation.lastMessage = message._id;
+      await conversation.save();
+
+      const populatedMessage = await Message.findById(message._id).populate(
+        "senderId",
+        "username ",
+      );
+
+      // Send to everyone in the conversation room.
+      io.to(`conversation:${conversationId}`).emit(
+        "message:new",
+        populatedMessage,
+      );
+      // find all participants except the sender and send them a notification
+      const senderId = socket.userId.toString();
+      const notification = {
+        messageId: message._id.toString(),
+        conversationId: conversation._id.toString(),
+        senderId,
+        senderUsername: populatedMessage.senderId.username,
+        preview: message.content.slice(0, 120),
+        createdAt: message.createdAt,
+      };
+      // Send notification to all participants except the sender
+      for (const participantId of conversation.participants) {
+        const recipientId = participantId.toString();
+        if (recipientId === senderId) continue;
+
+        io.to(`user:${recipientId}`).emit("notification:new", notification);
+      }
+
+      console.info("[chat] broadcast new message", {
+        socketId: socket.id,
+        conversationId: conversationId.toString(),
+        messageId: message._id.toString(),
+      });
+
+      callback?.({
+        success: true,
+        message: populatedMessage,
+      });
+    } catch (error) {
+      console.error("Message sending error:", error);
+
+      callback?.({
+        success: false,
+        message: "Failed to send message",
+      });
+    }
+  });
+};

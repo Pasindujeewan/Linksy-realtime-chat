@@ -2,9 +2,15 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router";
+import { ToastProvider } from "../contexts/ToastContext";
 import { UserProvider } from "../contexts/UserContext";
 import DashboardPage from "../features/dashboard/DashboardPage";
+import ProfilePage from "../features/profile/ProfilePage";
 import RegisterPage from "./RegisterPage";
+
+vi.mock("../features/dashboard/ChatUserList", () => ({
+  default: () => null,
+}));
 
 vi.mock("../services/authService", () => ({
   getUserProfile: vi.fn(),
@@ -24,14 +30,17 @@ const mockedUploadProfileImage = vi.mocked(uploadProfileImage);
 
 function renderRegisterFlow() {
   return render(
-    <UserProvider>
-      <MemoryRouter initialEntries={["/register"]}>
-        <Routes>
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-        </Routes>
-      </MemoryRouter>
-    </UserProvider>,
+    <ToastProvider>
+      <UserProvider>
+        <MemoryRouter initialEntries={["/register"]}>
+          <Routes>
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+          </Routes>
+        </MemoryRouter>
+      </UserProvider>
+    </ToastProvider>,
   );
 }
 
@@ -180,7 +189,8 @@ describe("RegisterPage", () => {
     expect(mockedUploadProfileImage.mock.invocationCallOrder[0]).toBeLessThan(
       mockedRegisterUser.mock.invocationCallOrder[0],
     );
-    expect(await screen.findByRole("heading", { name: "Welcome, alex_morgan" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Good to see you, alex_morgan." })).toBeInTheDocument();
+    await user.click(screen.getByRole("link", { name: "View your profile" }));
     expect(await screen.findByAltText("alex_morgan's profile")).toHaveAttribute(
       "src",
       "https://cdn.example.com/avatar.png",

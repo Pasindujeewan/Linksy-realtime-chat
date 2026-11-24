@@ -16,6 +16,7 @@ import { successResponse } from "../utils/response.js";
 import mongoose from "mongoose";
 import { getPendingUpload } from "../services/pendingUploadService.js";
 import { setValue } from "../utils/redisUtils.js";
+import { invalidatePublicUsersCache } from "../services/publicUsersCacheService.js";
 import { authenticateGoogleUser } from "../services/googleAuthService.js";
 
 const accessTokenCookieOptions = {
@@ -35,9 +36,7 @@ export const loginUser = async (req, res, next) => {
     }
 
     const { email, password } = validateResult.data;
-    const user = await User.findOne({ email })
-      .select("+passwordHash")
-      .lean();
+    const user = await User.findOne({ email }).select("+passwordHash").lean();
 
     if (
       !user ||
@@ -46,7 +45,11 @@ export const loginUser = async (req, res, next) => {
       !user.isActive ||
       !(await argon2.verify(user.passwordHash, password))
     ) {
-      throw new AppError("Invalid email or password", 401, "INVALID_CREDENTIALS");
+      throw new AppError(
+        "Invalid email or password",
+        401,
+        "INVALID_CREDENTIALS",
+      );
     }
 
     const accessToken = generateAccessToken(user._id);
@@ -156,6 +159,12 @@ export const registerUser = async (req, res, next) => {
       avatarUrl: pendingUpload, // Save the S3 image key as avatarUrl
     });
 
+    try {
+      await invalidatePublicUsersCache();
+    } catch (error) {
+      console.error("Failed to invalidate public users cache:", error);
+    }
+
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -185,6 +194,7 @@ export const logoutUser = async (req, res, next) => {
     const accessToken = req.cookies?.accessToken;
 
     if (accessToken) {
+      const accessTokenBlacklistKey = getAccessTokenBlacklistKey(accessToken);
       let payload;
 
       try {
@@ -198,12 +208,15 @@ export const logoutUser = async (req, res, next) => {
       if (payload && typeof payload !== "string" && payload.exp) {
         const ttlSeconds = Math.ceil(payload.exp - Date.now() / 1000);
         if (ttlSeconds > 0) {
-          await setValue(
-            getAccessTokenBlacklistKey(accessToken),
-            "1",
-            ttlSeconds,
-          );
+          await setValue(accessTokenBlacklistKey, "1", ttlSeconds);
         }
+      }
+      // Disconnect all sockets associated with this access token
+      const io = req.app.get("io");
+      if (io) {
+        io.in(`access-token:${accessTokenBlacklistKey}`).disconnectSockets(
+          true,
+        );
       }
     }
 

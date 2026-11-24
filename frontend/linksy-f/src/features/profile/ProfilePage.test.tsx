@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router";
@@ -15,6 +15,10 @@ vi.mock("../../services/authService", () => ({
 }));
 
 import { updateUserProfile } from "../../services/authService";
+
+vi.mock("../dashboard/ChatUserList", () => ({
+  default: () => null,
+}));
 
 const mockedGetUserProfile = vi.mocked(getUserProfile);
 const mockedUpdateUserProfile = vi.mocked(updateUserProfile);
@@ -94,7 +98,11 @@ describe("profile navigation", () => {
     await user.type(bioInput, "Updated bio");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
-    expect(await screen.findByText("alex_updated")).toBeInTheDocument();
+    expect(
+      await within(screen.getByLabelText("Profile details")).findByText(
+        "alex_updated",
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByText("Updated bio")).toBeInTheDocument();
     expect(mockedUpdateUserProfile).toHaveBeenCalledWith("user-1", {
       username: "alex_updated",

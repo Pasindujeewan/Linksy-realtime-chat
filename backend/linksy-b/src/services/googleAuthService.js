@@ -1,6 +1,7 @@
 import User from "../models/user.model.js";
 import { AppError } from "../errors/AppError.js";
 import { getFirebaseAuth } from "../config/firebase.js";
+import { invalidatePublicUsersCache } from "./publicUsersCacheService.js";
 
 const invalidFirebaseTokenCodes = new Set([
   "auth/argument-error",
@@ -107,6 +108,15 @@ export const authenticateGoogleUser = async (idToken) => {
       authProvider: "google",
       googleId: decodedToken.uid,
     });
+
+    try {
+      await invalidatePublicUsersCache();
+    } catch (error) {
+      console.error(
+        "Failed to invalidate public users cache after Google registration:",
+        error,
+      );
+    }
 
     return user;
   } catch (error) {

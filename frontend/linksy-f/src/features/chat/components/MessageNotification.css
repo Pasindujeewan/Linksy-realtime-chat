@@ -1,0 +1,120 @@
+.message-notification-container {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 110;
+  display: flex;
+  width: min(360px, calc(100vw - 32px));
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.message-notification {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #e4e9e3;
+  border-radius: 14px;
+  background: #fff;
+  color: #35433a;
+  box-shadow: 0 12px 32px rgb(25 42 31 / 16%);
+  pointer-events: auto;
+  animation: message-notification-enter 180ms ease-out;
+}
+
+.message-notification-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 11px;
+  background: var(--linksy-primary-soft);
+  color: var(--linksy-primary);
+}
+
+.message-notification-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.message-notification-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.message-notification-title {
+  margin: 1px 0 4px;
+  color: #304037;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.message-notification-preview {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: #748078;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.message-notification-dismiss {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #879189;
+  cursor: pointer;
+}
+
+.message-notification-dismiss:hover {
+  background: #f0f3ef;
+  color: #405047;
+}
+
+.message-notification-dismiss svg {
+  width: 16px;
+  height: 16px;
+}
+
+.message-notification-dismiss:focus-visible {
+  outline: 3px solid var(--linksy-primary-focus);
+  outline-offset: 2px;
+}
+
+@keyframes message-notification-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .message-notification-container {
+    right: 12px;
+    bottom: 12px;
+    width: calc(100vw - 24px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .message-notification {
+    animation: none;
+  }
+}
