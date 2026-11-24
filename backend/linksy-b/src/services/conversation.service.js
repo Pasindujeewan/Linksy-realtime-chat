@@ -2,6 +2,7 @@ import Conversation from "../models/conversation.model.js";
 import Message from "../models/meassage.model.js";
 import { AppError } from "../errors/AppError.js";
 import { generateParticipantKey } from "../utils/participantKey.js";
+import { generateImageUrl } from "../utils/generateImageUrl.js";
 
 export const createOrGetConversation = async (userId, receiverId) => {
   const participantKey = generateParticipantKey(userId, receiverId);
@@ -29,6 +30,54 @@ export const createOrGetConversation = async (userId, receiverId) => {
 
     throw error;
   }
+};
+
+export const getUserConversations = async (userId) => {
+  const conversations = await Conversation.find({
+    participants: userId,
+    type: "private",
+    lastMessage: { $ne: null },
+  })
+    .sort({ updatedAt: -1, _id: -1 })
+    .populate({ path: "participants", select: "username avatarUrl isActive" })
+    .populate({
+      path: "lastMessage",
+      select: "content senderId createdAt",
+    })
+    .lean();
+
+  const summaries = await Promise.all(
+    conversations.map(async (conversation) => {
+      const participant = conversation.participants.find(
+        (user) =>
+          user &&
+          user.isActive &&
+          user._id.toString() !== userId.toString(),
+      );
+      const { lastMessage } = conversation;
+
+      if (!participant || !lastMessage) return null;
+
+      return {
+        id: conversation._id.toString(),
+        participant: {
+          id: participant._id.toString(),
+          username: participant.username,
+          avatarUrl: participant.avatarUrl
+            ? await generateImageUrl(participant.avatarUrl)
+            : null,
+        },
+        lastMessage: {
+          content: lastMessage.content,
+          senderId: lastMessage.senderId.toString(),
+          createdAt: lastMessage.createdAt?.toISOString(),
+        },
+        updatedAt: conversation.updatedAt?.toISOString(),
+      };
+    }),
+  );
+
+  return summaries.filter((summary) => summary !== null);
 };
 
 export const getConversationMessages = async (

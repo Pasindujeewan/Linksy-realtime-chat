@@ -2,6 +2,7 @@ import { LogOut, UserRound } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import ChatUserList from "./ChatUserList";
+import RecentChats from "./RecentChats";
 import { useUser } from "../../contexts/UserContext";
 import { useToast } from "../../contexts/ToastContext";
 import "./DashboardPage.css";
@@ -91,7 +92,7 @@ export default function DashboardPage() {
           <p className="dashboard-eyebrow">YOUR LINKSY SPACE</p>
           <h1 id="dashboard-title">Good to see you, {displayName}.</h1>
           <p>
-            Find someone from the community and open their profile to say hello.
+            Pick up a conversation or find someone new to chat with.
           </p>
         </section>
 
@@ -102,7 +103,10 @@ export default function DashboardPage() {
         )}
 
         <div className="dashboard-layout">
-          <ChatUserList />
+          <div className="dashboard-main-content">
+            <RecentChats />
+            <ChatUserList />
+          </div>
           <aside
             className="dashboard-profile-card"
             aria-labelledby="account-heading"

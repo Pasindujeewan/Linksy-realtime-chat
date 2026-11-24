@@ -28,6 +28,21 @@ export interface ConversationHistoryPage {
   nextCursor: MessageCursor | null;
 }
 
+export interface RecentConversation {
+  id: string;
+  participant: {
+    id: string;
+    username: string;
+    avatarUrl: string | null;
+  };
+  lastMessage: {
+    content: string;
+    senderId: string;
+    createdAt: string;
+  };
+  updatedAt: string;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -39,6 +54,45 @@ function readIdentifier(value: unknown): string | null {
   if (typeof value.id === "string" && value.id.length > 0) return value.id;
   if (typeof value._id === "string" && value._id.length > 0) return value._id;
   return null;
+}
+
+export function parseRecentConversation(
+  value: unknown,
+): RecentConversation | null {
+  if (!isRecord(value) || !isRecord(value.participant)) return null;
+  if (!isRecord(value.lastMessage)) return null;
+
+  const id = readIdentifier(value.id);
+  const participantId = readIdentifier(value.participant.id);
+  const senderId = readIdentifier(value.lastMessage.senderId);
+  if (
+    !id ||
+    !participantId ||
+    typeof value.participant.username !== "string" ||
+    (value.participant.avatarUrl !== null &&
+      typeof value.participant.avatarUrl !== "string") ||
+    !senderId ||
+    typeof value.lastMessage.content !== "string" ||
+    typeof value.lastMessage.createdAt !== "string" ||
+    typeof value.updatedAt !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    id,
+    participant: {
+      id: participantId,
+      username: value.participant.username,
+      avatarUrl: value.participant.avatarUrl,
+    },
+    lastMessage: {
+      content: value.lastMessage.content,
+      senderId,
+      createdAt: value.lastMessage.createdAt,
+    },
+    updatedAt: value.updatedAt,
+  };
 }
 
 export function parseIncomingMessageNotification(

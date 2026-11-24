@@ -44,7 +44,6 @@ interface BackendUserDirectoryPage {
     id: string;
     username: string;
     avatarUrl: string | null;
-    lastMessage?: string | null;
   }>;
   pagination: UserDirectoryPage["pagination"];
 }
@@ -213,10 +212,7 @@ export async function getOtherUsers(page: number): Promise<UserDirectoryPage> {
     if (
       typeof profile.id !== "string" ||
       typeof profile.username !== "string" ||
-      (profile.avatarUrl !== null && typeof profile.avatarUrl !== "string") ||
-      (profile.lastMessage !== undefined &&
-        profile.lastMessage !== null &&
-        typeof profile.lastMessage !== "string")
+      (profile.avatarUrl !== null && typeof profile.avatarUrl !== "string")
     ) {
       throw new Error("The people directory response is invalid.");
     }
@@ -246,10 +242,7 @@ export async function searchUsers(username: string): Promise<DirectoryUser[]> {
       (user) =>
         typeof user.id !== "string" ||
         typeof user.username !== "string" ||
-        (user.avatarUrl !== null && typeof user.avatarUrl !== "string") ||
-        (user.lastMessage !== undefined &&
-          user.lastMessage !== null &&
-          typeof user.lastMessage !== "string"),
+        (user.avatarUrl !== null && typeof user.avatarUrl !== "string"),
     )
   ) {
     throw new Error("The user search response is invalid.");

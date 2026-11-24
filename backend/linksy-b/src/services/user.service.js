@@ -1,5 +1,4 @@
 import User from "../models/user.model.js";
-import Conversation from "../models/conversation.model.js";
 import { AppError } from "../errors/AppError.js";
 import { generateImageUrl } from "../utils/generateImageUrl.js";
 import {
@@ -20,43 +19,6 @@ const createPublicUserProfiles = (profiles) =>
       avatarUrl: avatarKey ? await generateImageUrl(avatarKey) : null,
     })),
   );
-
-const addLastMessages = async (profiles, userId) => {
-  if (profiles.length === 0) return profiles;
-
-  const conversations = await Conversation.find({
-    $and: [
-      { participants: userId },
-      { participants: { $in: profiles.map(({ id }) => id) } },
-    ],
-    lastMessage: { $ne: null },
-  })
-    .select("participants lastMessage")
-    .populate({ path: "lastMessage", select: "content" })
-    .lean();
-
-  const lastMessagesByUserId = new Map();
-  for (const conversation of conversations) {
-    const otherUserId = conversation.participants.find(
-      (participantId) => participantId.toString() !== userId.toString(),
-    );
-    if (
-      otherUserId &&
-      conversation.lastMessage &&
-      typeof conversation.lastMessage.content === "string"
-    ) {
-      lastMessagesByUserId.set(
-        otherUserId.toString(),
-        conversation.lastMessage.content,
-      );
-    }
-  }
-
-  return profiles.map((profile) => ({
-    ...profile,
-    lastMessage: lastMessagesByUserId.get(profile.id) ?? null,
-  }));
-};
 
 // Get user by ID and generate a signed URL for the avatar
 export const getUserById = async (userId) => {
@@ -149,10 +111,7 @@ export const getOtherUsers = async (userId, page) => {
 
   if (cachedResult) {
     return {
-      users: await addLastMessages(
-        await createPublicUserProfiles(cachedResult.users),
-        userId,
-      ),
+      users: await createPublicUserProfiles(cachedResult.users),
       pagination: cachedResult.pagination,
     };
   }
@@ -184,10 +143,7 @@ export const getOtherUsers = async (userId, page) => {
   await setPublicUsersCache(cacheKey, { users: profiles, pagination });
 
   return {
-    users: await addLastMessages(
-      await createPublicUserProfiles(profiles),
-      userId,
-    ),
+    users: await createPublicUserProfiles(profiles),
     pagination,
   };
 };
@@ -215,5 +171,5 @@ export const searchUsersByUsername = async (username, userId) => {
     })),
   );
 
-  return addLastMessages(profiles, userId);
+  return profiles;
 };

@@ -3,11 +3,25 @@ import { AppError } from "../errors/AppError.js";
 import {
   deleteConversation as deleteConversationById,
   getConversationMessages as fetchConversationMessages,
+  getUserConversations as fetchUserConversations,
 } from "../services/conversation.service.js";
 import { successResponse } from "../utils/response.js";
 
 const DEFAULT_MESSAGE_LIMIT = 50;
 const MAX_MESSAGE_LIMIT = 100;
+
+export const getUserConversations = async (req, res, next) => {
+  try {
+    const conversations = await fetchUserConversations(req.user.sub);
+    return successResponse(
+      res,
+      conversations,
+      "Conversations retrieved successfully",
+    );
+  } catch (error) {
+    return next(error);
+  }
+};
 
 export const getConversationMessages = async (req, res, next) => {
   try {

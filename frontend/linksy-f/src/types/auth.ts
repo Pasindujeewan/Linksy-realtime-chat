@@ -38,7 +38,6 @@ export interface DirectoryUser {
   id: string;
   username: string;
   avatarUrl: string | null;
-  lastMessage?: string | null;
 }
 
 export interface UserDirectoryPage {

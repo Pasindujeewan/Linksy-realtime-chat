@@ -1,9 +1,11 @@
 import type { ApiResponse } from "../../../types/auth";
 import {
   parseConversationMessage,
+  parseRecentConversation,
   type ConversationHistoryPage,
   type ConversationMessage,
   type MessageCursor,
+  type RecentConversation,
 } from "../types";
 
 const apiUrl = (import.meta.env.VITE_API_URL ?? "http://localhost:3000").replace(
@@ -15,6 +17,26 @@ interface BackendConversationHistoryPage {
   messages: unknown[];
   hasMore: boolean;
   nextCursor: MessageCursor | null;
+}
+
+export async function getRecentConversations(): Promise<RecentConversation[]> {
+  const response = await fetch(`${apiUrl}/api/conversations`, {
+    credentials: "include",
+  });
+  const result = (await response.json()) as ApiResponse<unknown>;
+
+  if (!response.ok || !result.success || !Array.isArray(result.data)) {
+    throw new Error(result.message || "We couldn't load your recent chats.");
+  }
+
+  const conversations = result.data.map(parseRecentConversation);
+  if (conversations.some((conversation) => conversation === null)) {
+    throw new Error("The recent chats response is invalid.");
+  }
+
+  return conversations.filter(
+    (conversation): conversation is RecentConversation => conversation !== null,
+  );
 }
 
 export async function getConversationMessages(
